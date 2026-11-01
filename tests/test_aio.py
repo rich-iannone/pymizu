@@ -299,6 +299,56 @@ def test_channel_drain_error_fails_waiters():
         peer.destroy()
 
 
+def test_recv_async_foreign_payload_rejects_head_only():
+    # [ok, declined, ok]: the declined message rejects only its own
+    # waiter with ForeignPayloadError — the drain keeps flowing
+    host, peer = chan_pair()
+    try:
+
+        async def main():
+            f1 = host.recv_async()
+            f2 = host.recv_async()
+            f3 = host.recv_async()
+            peer.send("a")
+            _pymizu._channel_send_raw(peer._h, b"R")
+            peer.send("c")
+            assert await f1 == "a"
+            with pytest.raises(pymizu.ForeignPayloadError, match="R payload"):
+                await f2
+            assert await f3 == "c"
+
+        asyncio.run(main())
+    finally:
+        host.destroy()
+        peer.destroy()
+
+
+def test_async_for_reentry_skips_a_foreign_payload():
+    # a decline ends the async-for statement; re-entering on the same
+    # channel resumes with the next message (the drain kept flowing)
+    host, peer = chan_pair()
+    try:
+
+        async def main():
+            peer.send("a")
+            _pymizu._channel_send_raw(peer._h, b"R")
+            peer.send("c")
+            peer._close_signal()
+            got = []
+            with pytest.raises(pymizu.ForeignPayloadError):
+                async for x in host:
+                    got.append(x)
+            assert got == ["a"]
+            async for x in host:
+                got.append(x)
+            assert got == ["a", "c"]
+
+        asyncio.run(main())
+    finally:
+        host.destroy()
+        peer.destroy()
+
+
 def test_close_settles_pending_recv(ch):
     # a completed close settles pending recv futures with CLOSED
     async def main():

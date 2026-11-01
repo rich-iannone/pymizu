@@ -17,6 +17,7 @@ from tests.helpers import (
     BytesSubclass,
     StrSubclass,
     UnprintableError,
+    chan_pair,
     parked_thread,
     wait_guard_held,
 )
@@ -892,9 +893,35 @@ def test_view_survives_channel_destroy(echo):
 
 def test_r_codec_stream_dispatch():
     # mizu's compact codec magic is 'R' (0x52): the read side declines it
-    # with the informative foreign-payload error, not "unrecognized"
-    with pytest.raises(pymizu.MizuError, match="R payload"):
+    # with the classed foreign-payload error, not "unrecognized"
+    with pytest.raises(pymizu.ForeignPayloadError, match="R payload"):
         pymizu._pymizu._read_stream(b"R")
+
+
+def test_unrecognized_stream_is_a_foreign_payload():
+    # any unrecognized first byte is the same recoverable class (the
+    # default arm — future-proof against a third binding's codec)
+    with pytest.raises(
+        pymizu.ForeignPayloadError, match="unrecognized payload"
+    ):
+        pymizu._pymizu._read_stream(b"\x01")
+
+
+def test_recv_batch_stops_before_a_foreign_payload():
+    # [ok, declined, ok]: the batch returns the prefix, the decline
+    # surfaces (consumed) on the next receive, and the ring keeps flowing
+    host, peer = chan_pair()
+    try:
+        peer.send("a")
+        pymizu._pymizu._channel_send_raw(peer._h, b"R")
+        peer.send("c")
+        assert host.recv_batch(3, timeout=1) == ["a"]
+        with pytest.raises(pymizu.ForeignPayloadError, match="R payload"):
+            host.recv(timeout=1)
+        assert host.recv(timeout=1) == "c"
+    finally:
+        host.destroy()
+        peer.destroy()
 
 
 def test_unpickle_failure_is_consumed():

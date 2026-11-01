@@ -85,6 +85,10 @@ await ch.recv_async()
 
 `async for x in ch` is the stream form: it awaits each value through `recv_async()` and ends on `CLOSED` or `PEER_GONE`, exactly as the sync iterator ends.
 
+A message the peer sent outside the portable interchange subset (a language-private stream) is declined at read time with `ForeignPayloadError`: the message is consumed and the channel keeps flowing.
+`recv_async()` rejects only the waiter that receives it; the other outstanding calls are unaffected.
+The rejection also ends an `async for` statement — a try/except inside the loop body cannot catch it; wrap the whole loop and re-enter on the same channel to skip the message.
+
 ## Closing
 
 `ch.close()` is the orderly shutdown: it tells the peer to close and waits for it to finish reading before releasing the shared memory:

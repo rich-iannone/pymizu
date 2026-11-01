@@ -27,6 +27,7 @@ from pymizu._pymizu import (
     CancelledError,
     ConcurrentUseError,
     DeclinedError,
+    ForeignPayloadError,
     Frame,
     MizuError,
     Sentinel,
@@ -324,6 +325,13 @@ class Channel:
         [`recv()`](`pymizu.Channel.recv`) on the same side while
         waiters are pending raises
         [`ConcurrentUseError`](`pymizu.ConcurrentUseError`).
+
+        A message the peer sent outside the portable interchange subset
+        (a language-private stream) rejects only the waiter that
+        receives it, with
+        [`ForeignPayloadError`](`pymizu.ForeignPayloadError`) — the
+        message is consumed and the async consumer keeps flowing, so
+        the other outstanding calls are unaffected.
         """
         from pymizu import _aio
 
@@ -338,6 +346,14 @@ class Channel:
         iterations nothing is armed; the next iteration re-arms and the
         arm's synchronous drain picks up whatever arrived meanwhile
         (loss-free).
+
+        A declined foreign payload (see
+        [`recv_async()`](`pymizu.Channel.recv_async`)) propagates out of
+        the iteration and ends the ``async for`` statement — a
+        try/except inside the loop body cannot catch it. To skip one,
+        wrap the whole loop and re-enter on the same channel: the
+        consumer kept flowing, and the new iterator picks up the next
+        message.
         """
         while True:
             x = await self.recv_async()
@@ -1642,6 +1658,7 @@ __all__ = [
     "ConcurrentUseError",
     "DeclinedError",
     "DimArray",
+    "ForeignPayloadError",
     "Frame",
     "Map",
     "Pool",

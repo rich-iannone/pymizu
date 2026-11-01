@@ -34,6 +34,7 @@ from typing import Any as _Any
 
 from pymizu._pymizu import CLOSED as _CLOSED
 from pymizu._pymizu import PEER_GONE as _GONE
+from pymizu._pymizu import ForeignPayloadError as _ForeignPayloadError
 
 if _TYPE_CHECKING:  # pragma: no cover
     import pymizu
@@ -131,7 +132,19 @@ class _ChanState:
                     assert self.loop is not None
                     self.loop.call_soon(self._drain)
                     return
-                burst = self.ch._h._recv_burst(want)
+                try:
+                    burst = self.ch._h._recv_burst(want)
+                except _ForeignPayloadError as e:
+                    # a declined foreign payload: the burst consumed the
+                    # slot as its first message, so reject the head
+                    # waiter only — the drain keeps flowing (recv_batch's
+                    # exact semantics, mizu's handler discipline). The
+                    # generic except below stays the fail-all path
+                    fut = self.fifo.popleft()
+                    if not fut.done():
+                        fut.set_exception(e)
+                    work += 1
+                    continue
                 n = 0
                 for x in burst:
                     if x is _CLOSED or x is _GONE:

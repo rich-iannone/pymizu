@@ -81,6 +81,8 @@ static PyObject *MizuWorkerDiedError;
 static PyObject *MizuTaskLostError;   /* the claimant's own gone verdict */
 static PyObject *MizuTaskError;       /* a task's own error, re-raised */
 static PyObject *MizuDeclinedError;   /* a foreign-handle send-time decline */
+static PyObject *MizuForeignPayloadError;  /* a received language-private or
+                                              unrecognized payload */
 static PyObject *MizuConcurrentUseError;  /* two verbs, one handle role */
 
 /* traceback.format_exception, resolved lazily on the first task error (the
@@ -1702,6 +1704,10 @@ typedef struct {
   uint64_t pool_ident;     /* pool: the cached pool word (0 until a worker
                               joins; re-read while 0, never reset after) */
   PyObject *err_exc;
+  PyObject *raw_payload;   /* the test-only raw send (_channel_send_raw):
+                              the stage hook pointer-matches it and frames
+                              the bytes verbatim. Same set/clear bracket
+                              discipline as err_exc */
   int exec_fail;           /* pool worker, test-only: fail the next task
                               decode (1 = corrupt payload, 2 = the vanished-
                               payload gone read); the _exec_fail seam */
@@ -1726,6 +1732,17 @@ static int py_stage(void *obj, mizu_slot_hdr *hdr, uint8_t *payload,
        codec choice below. §4.1's spec submit reuses this pattern. */
     hctx->err_exc = NULL;
     int rc = frame_err_exc(obj, payload, inline_max, hdr);
+    PyGILState_Release(gil);
+    return rc;
+  }
+  if (hctx != NULL && obj == hctx->raw_payload) {
+    /* the test-only raw send (_channel_send_raw): frame the caller's
+       bytes verbatim — the receive-side decline path has no natural
+       trigger (a known foreign peer is gated at send) */
+    hctx->raw_payload = NULL;
+    int rc = stage_bytes((const uint8_t *) PyBytes_AS_STRING((PyObject *) obj),
+                         (size_t) PyBytes_GET_SIZE((PyObject *) obj),
+                         hdr, payload, inline_max, h);
     PyGILState_Release(gil);
     return rc;
   }
@@ -4261,15 +4278,20 @@ static PyObject *read_stream(const uint8_t *src, size_t n,
     return pymizu_ix_read(src, n, ctx);
   case MIZU_CODEC_MAGIC: case 'B': case 'X': case 'A':
     /* foreign stream: consume the slot (a plain failure would wedge the
-       ring behind it); the verb surfaces MIZU_ERR with this message */
+       ring behind it); the verb surfaces MIZU_ERR with this message. The
+       classed error is recoverable: the async drain rejects only the
+       head waiter and keeps flowing (mizu's handler discipline) */
     ctx->flags |= MIZU_READ_CONSUME;
-    PyErr_SetString(MizuError, "pymizu: R payload (a language-private "
+    PyErr_SetString(MizuForeignPayloadError,
+                    "pymizu: R payload (a language-private "
                     "stream) - send values from the portable interchange "
                     "subset");
     return NULL;
   default:
+    /* as the foreign-stream arm: any unrecognized first byte is the same
+       recoverable decline (future-proof against a third binding's codec) */
     ctx->flags |= MIZU_READ_CONSUME;
-    PyErr_SetString(MizuError, "pymizu: unrecognized payload");
+    PyErr_SetString(MizuForeignPayloadError, "pymizu: unrecognized payload");
     return NULL;
   }
 }
@@ -5756,10 +5778,13 @@ static PyObject *Channel_recv(MizuChannel *self, PyObject *args,
 
 PyDoc_STRVAR(recv_burst_doc,
 "_recv_burst(n) -> list\n\n\
-The async drain's burst receive: up to n messages in one GIL-held call,\n\
-each a non-blocking receive. A drained ring ends the list early; a\n\
-terminal state is the list's last element. Skips the per-call GIL drop\n\
-recv() pays for its indefinite wait — a burst never blocks.");
+The async drain's burst receive: up to n messages in one GIL-held call\n\
+over the core's batch verb with a zero wait — a burst never blocks,\n\
+skipping the per-call GIL drop recv() pays for its indefinite wait. A\n\
+drained ring ends the list early; a terminal state is the list's last\n\
+element. recv_batch's decline semantics exactly: a declined message\n\
+(ForeignPayloadError) past the first ends the burst early and the slot\n\
+stays, so the next burst raises it as its first message (consuming it).");
 
 static PyObject *Channel_recv_burst(MizuChannel *self, PyObject *arg) {
   Py_ssize_t cap = PyLong_AsSsize_t(arg);
@@ -5771,29 +5796,35 @@ static PyObject *Channel_recv_burst(MizuChannel *self, PyObject *arg) {
   mizu_channel *c = chan_get(self);
   if (c == NULL) return NULL;
   if (role_enter(&self->verb_active, chan_concurrent_msg)) return NULL;
-  PyObject *out = PyList_New(0);
+  PyObject *out = PyList_New(cap);
   if (out == NULL) {
     role_leave(&self->verb_active);
     return NULL;
   }
-  mizu_status st = MIZU_OK;
-  self->in_flight++;   /* the destroy pin, as CHAN_ALLOW_THREADS (GIL held) */
-  for (Py_ssize_t i = 0; i < cap; i++) {
-    void *obj = NULL;
-    st = mizu_channel_recv(c, &obj, 0);
-    if (st != MIZU_OK) break;
-    if (PyList_Append(out, (PyObject *) obj) < 0) {
-      Py_DECREF((PyObject *) obj);
-      Py_DECREF(out);
-      chan_in_flight_done(self);
-      role_leave(&self->verb_active);
-      return NULL;   /* the Python error stands */
-    }
-    Py_DECREF((PyObject *) obj);
-  }
+  size_t count = 0;
+  self->in_flight++;   /* the destroy pin, as recv_batch (GIL held) */
+  mizu_status st = mizu_channel_recv_batch_fn(c, (size_t) cap, &count,
+                                              list_sink, out, 0);
   int err = chan_call_done(self, c, st);
   role_leave(&self->verb_active);
   if (err) {
+    Py_DECREF(out);
+    return NULL;   /* a first-message decline raises here, slot consumed */
+  }
+  if (st == MIZU_OK && PyErr_Occurred()) {
+    /* a decline past the first message ended the burst early: the prefix
+       is real and the slot stays for the next burst to reproduce the
+       failure — clear its pending exception (recv_batch's discipline;
+       a BaseException-only one — an interrupt — propagates instead) */
+    if (PyErr_ExceptionMatches(PyExc_Exception)) {
+      PyErr_Clear();
+    } else {
+      Py_DECREF(out);
+      return NULL;
+    }
+  }
+  if (count < (size_t) cap &&
+      PyList_SetSlice(out, (Py_ssize_t) count, cap, NULL) < 0) {
     Py_DECREF(out);
     return NULL;
   }
@@ -8999,11 +9030,52 @@ static PyObject *pymizu_tune_malloc(PyObject *Py_UNUSED(module),
   Py_RETURN_NONE;
 }
 
+PyDoc_STRVAR(channel_send_raw_doc,
+"_channel_send_raw(h, bytes) -> None | sentinel\n\n\
+Test-only: stage the caller's bytes verbatim as the payload stream (the\n\
+INLINE / ARENA / SHM_RAW tiers), bypassing the value codecs — the\n\
+receive-side decline path has no natural trigger otherwise (a known\n\
+foreign peer is gated at send). send()'s returns.");
+
+static PyObject *pymizu_channel_send_raw(PyObject *Py_UNUSED(module),
+                                         PyObject *args) {
+  PyObject *h, *b;
+  if (!PyArg_ParseTuple(args, "OO:_channel_send_raw", &h, &b))
+    return NULL;
+  if (!PyObject_TypeCheck(h, &MizuChannelType)) {
+    PyErr_SetString(PyExc_TypeError, "pymizu: expected a _Channel handle");
+    return NULL;
+  }
+  if (!PyBytes_Check(b)) {
+    PyErr_SetString(PyExc_TypeError, "pymizu: expected a bytes payload");
+    return NULL;
+  }
+  MizuChannel *self = (MizuChannel *) h;
+  mizu_channel *c = chan_get(self);
+  if (c == NULL) return NULL;
+  MizuHandleCtx *hctx = (MizuHandleCtx *) self->vcache;
+  if (role_enter(&self->verb_active, chan_concurrent_msg)) return NULL;
+  /* as _send_error: the bracket lives inside the guard, so two raw sends
+     cannot interleave set/clear across the GIL drop */
+  hctx->raw_payload = b;
+  mizu_status st;
+  CHAN_ALLOW_THREADS(self);
+  st = mizu_channel_send(c, (void *) b);
+  CHAN_RESUME();
+  hctx->raw_payload = NULL;
+  int err = chan_call_done(self, c, st);
+  role_leave(&self->verb_active);
+  if (err) return NULL;
+  return status_or_sentinel(st, Py_None);
+}
+
 static PyMethodDef pymizu_methods[] = {
   {"_channel_new", (PyCFunction)(void (*)(void)) pymizu_channel_new,
    METH_VARARGS | METH_KEYWORDS, channel_new_doc},
   {"_channel_attach", (PyCFunction)(void (*)(void)) pymizu_channel_attach,
    METH_VARARGS | METH_KEYWORDS, channel_attach_doc},
+  {"_channel_send_raw", (PyCFunction) pymizu_channel_send_raw,
+   METH_VARARGS, channel_send_raw_doc},
   {"_pool_new", (PyCFunction)(void (*)(void)) pymizu_pool_new,
    METH_VARARGS | METH_KEYWORDS, pool_new_doc},
   {"_pool_attach", (PyCFunction) pymizu_pool_attach, METH_O, pool_attach_doc},
@@ -9176,6 +9248,13 @@ PyInit__pymizu(void)
                     "A send on a foreign-language channel of a value "
                     "outside the portable interchange subset. Carries "
                     "'path' and 'reason' attributes.") < 0 ||
+      add_exception(m, &MizuForeignPayloadError, "pymizu.ForeignPayloadError",
+                    MizuError, NULL,
+                    "A received payload in a language-private or "
+                    "unrecognized format: a peer sent outside the portable "
+                    "interchange subset. The message is consumed, never "
+                    "wedging the ring; the async drain rejects only the "
+                    "head waiter and continues.") < 0 ||
       add_exception(m, &MizuConcurrentUseError, "pymizu.ConcurrentUseError",
                     MizuError, NULL,
                     "A verb ran concurrently with another verb in the "
