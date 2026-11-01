@@ -895,7 +895,7 @@ ul.task-list li input[type="checkbox"] {
 </dd>
 <dt><a href="../reference/Map.html#pymizu.Map" class="doc-class doc-label doc-label-class">Map</a></dt>
 <dd>
-<p>A staged, submitted map — the handle-first return of</p>
+<p>A staged, submitted map; collects exactly once, through this handle.</p>
 </dd>
 <dt><a href="../reference/PreparedMap.html#pymizu.PreparedMap" class="doc-class doc-label doc-label-class">PreparedMap</a></dt>
 <dd>
@@ -951,15 +951,15 @@ ul.task-list li input[type="checkbox"] {
 </dd>
 <dt><a href="../reference/Pool.map.html#pymizu.Pool.map" class="doc-function doc-label doc-label-method">Pool.map()</a></dt>
 <dd>
-<p>Map <code>fn</code> over the elements of <code>x</code> on the pool; return the</p>
+<p>Map <code>fn</code> over <code>x</code> on the pool; return a map handle.</p>
 </dd>
 <dt><a href="../reference/Pool.starmap.html#pymizu.Pool.starmap" class="doc-function doc-label doc-label-method">Pool.starmap()</a></dt>
 <dd>
-<p>Map <code>fn</code> over <code>x</code>, unpacking each element as the call’s</p>
+<p>Map <code>fn</code> over <code>x</code>, unpacking each element as call arguments.</p>
 </dd>
 <dt><a href="../reference/Pool.map_prepare.html#pymizu.Pool.map_prepare" class="doc-function doc-label doc-label-method">Pool.map_prepare()</a></dt>
 <dd>
-<p>Stage a map once for repeated runs; return a</p>
+<p>Stage a map once for repeated runs; return a <a href="../reference/PreparedMap.html#pymizu.PreparedMap" class="gdls-link gdls-code">PreparedMap</a>.</p>
 </dd>
 <dt><a href="../reference/Pool.retire.html#pymizu.Pool.retire" class="doc-function doc-label doc-label-method">Pool.retire()</a></dt>
 <dd>

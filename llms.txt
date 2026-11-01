@@ -35,7 +35,7 @@
 
 - [Pool](https://shikokuchuo.net/pymizu/reference/Pool.html): A shared-memory work-stealing task pool handle (process-private)
 - [Task](https://shikokuchuo.net/pymizu/reference/Task.html): A task handle from Pool.submit(). Collected exactly once; an uncollected handle's finalizer releases its slot
-- [Map](https://shikokuchuo.net/pymizu/reference/Map.html): A staged, submitted map — the handle-first return of
+- [Map](https://shikokuchuo.net/pymizu/reference/Map.html): A staged, submitted map; collects exactly once, through this handle
 - [PreparedMap](https://shikokuchuo.net/pymizu/reference/PreparedMap.html): A map set up once in shared memory, run many times
 - [PoolExecutor](https://shikokuchuo.net/pymizu/reference/PoolExecutor.html): A `concurrent.futures.Executor` over a pymizu pool
 

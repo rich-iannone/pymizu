@@ -1,10 +1,10 @@
 # Pool.map()
 
-Map `fn` over the elements of `x` on the pool; return the
+Map `fn` over `x` on the pool; return a map handle.
 
 Usage
 
-[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L994-L1204)
+[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L994-L1203)
 
 ``` python
 Pool.map(
@@ -21,8 +21,6 @@ Pool.map(
     collect=None,
 )
 ```
-
-run's [`Map`](../reference/Map.md#pymizu.Map) handle.
 
 ## Parameters
 

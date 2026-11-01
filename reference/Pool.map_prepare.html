@@ -8,7 +8,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Stage a map once for repeated runs; return a">
+<meta name="description" content="Stage a map once for repeated runs; return a PreparedMap.">
 
 <title>Pool.map_prepare() | pymizu ミズ</title>
 <script type="application/ld+json">[{"@context": "https://schema.org", "@type": "SoftwareSourceCode", "name": "pymizu ミズ", "description": "Zero-copy async and parallel IPC across Python and R", "codeRepository": "https://github.com/shikokuchuo/pymizu", "license": "https://opensource.org/licenses/MIT", "url": "https://shikokuchuo.net/pymizu", "documentation": "https://shikokuchuo.net/pymizu", "programmingLanguage": {"@type": "ComputerLanguage", "name": "Python"}}, {"@context": "https://schema.org", "@type": "WebPage", "name": "Pool.map_prepare - pymizu ミズ", "isPartOf": {"@type": "WebSite", "name": "pymizu ミズ"}, "url": "https://shikokuchuo.net/pymizu/reference/Pool.map_prepare.html"}]</script>
@@ -131,10 +131,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <meta property="og:title" content="Pool.map_prepare() | pymizu ミズ">
-<meta property="og:description" content="Stage a map once for repeated runs; return a">
+<meta property="og:description" content="Stage a map once for repeated runs; return a PreparedMap.">
 <meta property="og:site_name" content="pymizu ミズ">
 <meta name="twitter:title" content="Pool.map_prepare() | pymizu ミズ">
-<meta name="twitter:description" content="Stage a map once for repeated runs; return a">
+<meta name="twitter:description" content="Stage a map once for repeated runs; return a PreparedMap.">
 <meta name="twitter:card" content="summary">
 </head>
 
@@ -821,11 +821,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <div class="doc-subject">
-<p>Stage a map once for repeated runs; return a</p>
+<p>Stage a map once for repeated runs; return a <a href="../reference/PreparedMap.html#pymizu.PreparedMap" class="gdls-link gdls-code">PreparedMap</a>.</p>
 </div>
 <div class="doc-usage-source">
 <p>Usage</p>
-<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L1261-L1302" target="_blank" rel="noopener">Source</a></p>
+<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L1259-L1299" target="_blank" rel="noopener">Source</a></p>
 </div>
 <div class="doc-signature doc-function">
 <div class="sourceCode" id="cb1"><pre class="sourceCode pythonsignature"><code class="sourceCode pythonsignature"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dt">Pool</span><span class="op">.</span><span class="fu">map_prepare</span>(</span>
@@ -840,7 +840,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
 </div>
 <div class="doc-text">
-<p><a href="../reference/PreparedMap.html#pymizu.PreparedMap" class="gdls-link"><code>PreparedMap</code></a>.</p>
 <p>Takes the same arguments as <a href="../reference/Pool.map.html#pymizu.Pool.map" class="gdls-link"><code>map()</code></a> (minus <code>seed</code>, <code>timeout</code>, and <code>collect</code> — the per-run options, which move to <a href="../reference/PreparedMap.html#pymizu.PreparedMap.run" class="gdls-link"><code>PreparedMap.run()</code></a>). The set-up — pickling the description, creating the shared region, the worker-side attach — is paid once here; each <code>pm.run()</code> re-arms cheaply, reuses the workers’ cached set-up, and returns the run’s <a href="../reference/Map.html#pymizu.Map" class="gdls-link"><code>Map</code></a> handle (the collect happens on it). A run collected with <code>collect="view"</code> hands its region to the view, so the next run stages a fresh one. With <code>stream=True</code> the staged <code>x</code> stays on the submitter, so a replacement <code>x</code> of any shape simply re-slices — only a length change under <code>template</code> stages fresh shared memory (the output area is sized for the staged length). Close the handle (or use it as a context manager) to release the region.</p>
 </div>
 

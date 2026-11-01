@@ -4,7 +4,7 @@ Test whether a received channel value is a remote error.
 
 Usage
 
-[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L1478-L1491)
+[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L1475-L1488)
 
 ``` python
 is_remote_error(x)

@@ -145,7 +145,7 @@ pool.stop()
 
 Unnamed arguments become positional arguments, and keyword arguments become named ones, matching R's calling convention. A `source=` task runs in a fresh environment with the keyword arguments bound as names and the positional arguments bound as `_1`, `_2`, … The result is the value of the last expression.
 
-On an R-worker pool, submitting a plain Python callable raises an error naming [pymizu.call()](../reference/call.md#pymizu.call). Task errors cross as [TaskError](../reference/TaskError.md#pymizu.TaskError) with the R error type preserved in `remote_type`. Arguments follow the same rules as channel payloads, zero-copy included: a large array crosses as one shared view, and an array that is already a received view crosses as its name alone. A pool's workers all run one language: mixing R and Python workers in one pool is not supported. The reverse direction mirrors this: `mizu::mizu_pool()` with `mizu::mizu_py_pool_launcher()`, and `mizu::mizu_submit_call()` with `mizu::mizu_call()` specs.
+On an R-worker pool, submitting a plain Python callable raises an error naming [pymizu.call()](../reference/call.md#pymizu.call). Task errors cross as [TaskError](../reference/TaskError.md#pymizu.TaskError) with the R error type preserved in `remote_type`. Arguments follow the same rules as channel payloads, zero-copy included: a large array crosses as one shared view, and an array that is already a received view crosses as its name alone. A pool's workers all run one language: mixing R and Python workers in one pool is not supported. The reverse direction mirrors this: `mizu::mizu_pool()` with `mizu::mizu_py_launcher()`, and `mizu::mizu_submit_call()` with `mizu::mizu_call()` specs.
 
 ## Mapping over a foreign pool
 

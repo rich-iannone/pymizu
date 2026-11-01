@@ -65,7 +65,7 @@ A shared-memory work-stealing task pool handle (process-private).
 A task handle from Pool.submit(). Collected exactly once; an uncollected handle's finalizer releases its slot.
 
 [Map](Map.md#pymizu.Map)  
-A staged, submitted map -- the handle-first return of
+A staged, submitted map; collects exactly once, through this handle.
 
 [PreparedMap](PreparedMap.md#pymizu.PreparedMap)  
 A map set up once in shared memory, run many times.
@@ -105,13 +105,13 @@ The event-driven [`collect_any()`](../reference/Pool.collect_any.md#pymizu.Pool.
 The event-driven [`collect_all()`](../reference/Pool.collect_all.md#pymizu.Pool.collect_all):
 
 [Pool.map()](Pool.map.md#pymizu.Pool.map)  
-Map `fn` over the elements of `x` on the pool; return the
+Map `fn` over `x` on the pool; return a map handle.
 
 [Pool.starmap()](Pool.starmap.md#pymizu.Pool.starmap)  
-Map `fn` over `x`, unpacking each element as the call's
+Map `fn` over `x`, unpacking each element as call arguments.
 
 [Pool.map_prepare()](Pool.map_prepare.md#pymizu.Pool.map_prepare)  
-Stage a map once for repeated runs; return a
+Stage a map once for repeated runs; return a [PreparedMap](../reference/PreparedMap.md#pymizu.PreparedMap).
 
 [Pool.retire()](Pool.retire.md#pymizu.Pool.retire)  
 Ask the worker in `slot` to exit cleanly (non-blocking,

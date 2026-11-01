@@ -1,6 +1,6 @@
 # Parallel map
 
-`Pool.map(fn, x)` maps `fn` over `x` on the pool and returns the run's handle immediately -- the work is set up and submitted at the call; collecting happens on the handle. It is not a loop over `pool.submit()`. The function, its constant `args=`/`kwargs=`, and the data are written to shared memory once, and one *runner* task per worker divides up the elements:
+`Pool.map(fn, x)` maps `fn` over `x` on the pool and returns a [Map](../reference/Map.md#pymizu.Map) handle immediately -- the work is set up and submitted at the call; collecting happens on the handle. It is not a loop over `pool.submit()`. The function, its constant `args=`/`kwargs=`, and the data are written to shared memory once, and one *runner* task per worker divides up the elements:
 
 ``` python
 import pymizu
@@ -13,7 +13,7 @@ result
 
     [5, 4, 3, 2, 1, 0, 1, 2, 3, 4]
 
-## The map handle
+## The [Map](../reference/Map.md#pymizu.Map) handle
 
 A map collects exactly once, through the handle:
 

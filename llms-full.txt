@@ -272,10 +272,10 @@ A task handle from Pool.submit(). Collected exactly once; an uncollected handle'
 
 Map(pool: 'pymizu.Pool', plan: '_Plan') -> 'None'
 
-A staged, submitted map — the handle-first return of
-[`Pool.map()`](`pymizu.Pool.map`) and
-[`PreparedMap.run()`](`pymizu.PreparedMap.run`): collection happens
-exactly once, through the handle. `collect()` blocks;
+A staged, submitted map; collects exactly once, through this handle.
+
+The handle-first return of [`Pool.map()`](`pymizu.Pool.map`) and
+[`PreparedMap.run()`](`pymizu.PreparedMap.run`). `collect()` blocks;
 `collect_async()` / `await` resolves one asyncio Future when the
 results arrive (never on a streaming map — its sliding task window
 advances in the blocking collect loop); `cancel()` stops the run:
@@ -648,8 +648,7 @@ Returns
 
 map(self, fn: '_Callable[..., _Any]', x: '_Iterable[_Any]', *, args: '_Iterable[_Any]' = (), kwargs: 'dict[str, _Any] | None' = None, template: '_Any' = None, n_chunks: 'int | None' = None, seed: 'int | bytes | bytearray | tuple[int | bytes | bytearray, int] | None' = None, timeout: 'float | None' = None, stream: 'bool' = False, collect: 'str | None' = None) -> '_Any'
 
-Map ``fn`` over the elements of ``x`` on the pool; return the
-run's [`Map`](`pymizu.Map`) handle.
+Map ``fn`` over ``x`` on the pool; return a map handle.
 
 Parameters
 ----------
@@ -828,11 +827,10 @@ Examples
 
 starmap(self, fn: '_Callable[..., _Any]', x: '_Iterable[_Any]', *, args: '_Iterable[_Any]' = (), kwargs: 'dict[str, _Any] | None' = None, template: '_Any' = None, n_chunks: 'int | None' = None, seed: 'int | bytes | bytearray | tuple[int | bytes | bytearray, int] | None' = None, timeout: 'float | None' = None, stream: 'bool' = False, collect: 'str | None' = None) -> '_Any'
 
-Map ``fn`` over ``x``, unpacking each element as the call's
-positional arguments: ``fn(*element, *args, **kwargs)``;
-return the run's [`Map`](`pymizu.Map`) handle, as
-[`map()`](`pymizu.Pool.map`).
+Map ``fn`` over ``x``, unpacking each element as call arguments.
 
+``fn(*element, *args, **kwargs)``; return the run's
+[`Map`](`pymizu.Map`) handle, as [`map()`](`pymizu.Pool.map`).
 The `multiprocessing.Pool.starmap` convention; for the
 multi-iterable shape of `concurrent.futures.Executor.map`,
 zip first: ``pool.starmap(fn, zip(xs, ys))``. Elements must be
@@ -844,8 +842,7 @@ streaming, the errors — is exactly
 
 map_prepare(self, fn: '_Callable[..., _Any]', x: '_Iterable[_Any]', *, args: '_Iterable[_Any]' = (), kwargs: 'dict[str, _Any] | None' = None, template: '_Any' = None, n_chunks: 'int | None' = None, stream: 'bool' = False) -> 'PreparedMap'
 
-Stage a map once for repeated runs; return a
-[`PreparedMap`](`pymizu.PreparedMap`).
+Stage a map once for repeated runs; return a `PreparedMap`.
 
 Takes the same arguments as [`map()`](`pymizu.Pool.map`) (minus
 ``seed``, ``timeout``, and ``collect`` — the per-run options,
@@ -2070,7 +2067,7 @@ For bulk maps, `Pool.map` remains the faster path: the executor's `map` runs one
 
 ### Parallel map
 
-`Pool.map(fn, x)` maps `fn` over `x` on the pool and returns the run's handle immediately — the work is set up and submitted at the call; collecting happens on the handle.
+`Pool.map(fn, x)` maps `fn` over `x` on the pool and returns a `Map` handle immediately — the work is set up and submitted at the call; collecting happens on the handle.
 It is not a loop over `pool.submit()`.
 The function, its constant `args=`/`kwargs=`, and the data are written to shared memory once, and one *runner* task per worker divides up the elements:
 
@@ -2083,7 +2080,7 @@ with pymizu.Pool.create(4) as pool:
 result
 ```
 
-## The map handle
+## The `Map` handle
 
 A map collects exactly once, through the handle:
 
@@ -2483,7 +2480,7 @@ On an R-worker pool, submitting a plain Python callable raises an error naming `
 Task errors cross as `TaskError` with the R error type preserved in `remote_type`.
 Arguments follow the same rules as channel payloads, zero-copy included: a large array crosses as one shared view, and an array that is already a received view crosses as its name alone.
 A pool's workers all run one language: mixing R and Python workers in one pool is not supported.
-The reverse direction mirrors this: `mizu::mizu_pool()` with `mizu::mizu_py_pool_launcher()`, and `mizu::mizu_submit_call()` with `mizu::mizu_call()` specs.
+The reverse direction mirrors this: `mizu::mizu_pool()` with `mizu::mizu_py_launcher()`, and `mizu::mizu_submit_call()` with `mizu::mizu_call()` specs.
 
 ## Mapping over a foreign pool
 
