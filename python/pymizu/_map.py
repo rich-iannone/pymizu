@@ -1504,16 +1504,17 @@ def _collect_region(
 
 
 class Map:
-    """A staged, submitted map — the handle-first return of
-    [`Pool.map()`](`pymizu.Pool.map`) and
-    [`PreparedMap.run()`](`pymizu.PreparedMap.run`): collection happens
-    exactly once, through the handle. `collect()` blocks;
+    """A staged, submitted map; collects exactly once, through this handle.
+
+    The handle-first return of [`Pool.map()`](`pymizu.Pool.map`) and
+    [`PreparedMap.run()`](`pymizu.PreparedMap.run`). `collect()` blocks;
     `collect_async()` / `await` resolves one asyncio Future when the
     results arrive (never on a streaming map — its sliding task window
     advances in the blocking collect loop); `cancel()` stops the run:
     workers halt within about one batch and the outstanding tasks are
     cancelled. A dropped uncollected handle cancels at GC, so no run of
-    fn is wasted. One collection per handle, as for tasks."""
+    fn is wasted. One collection per handle, as for tasks.
+    """
 
     __slots__ = (
         "pool",
@@ -1903,13 +1904,15 @@ class Map:
         return self._resolve(pymizu, remaining, expired)
 
     def collect_async(self) -> _Any:
-        """The event-driven collect: an asyncio.Future resolving with the
-        same results `collect()` returns (an element error rejects with
-        its index) — never blocks, never polls. Cancelling the Future
-        detaches the waiter (the handle collects blocking again); it
-        never cancels the map — `cancel()` stays the explicit verb. A
-        streaming map refuses: its sliding task window advances in the
-        blocking collect loop."""
+        """Resolve one asyncio.Future with the results `collect()` returns.
+
+        The event-driven collect — never blocks, never polls. An element
+        error rejects with its index. Cancelling the Future detaches the
+        waiter (the handle collects blocking again); it never cancels
+        the map — `cancel()` stays the explicit verb. A streaming map
+        refuses: its sliding task window advances in the blocking
+        collect loop.
+        """
         import pymizu
 
         if self._done:
@@ -1966,13 +1969,15 @@ class Map:
         self._promised = False
 
     def cancel(self) -> None:
-        """Stop the run: workers halt within about one batch and the
-        outstanding tasks are cancelled. Advisory, as
-        [`Task.cancel()`](`pymizu.Task.cancel`): a queued task is
-        skipped, a running batch completes and its result is dropped. A
-        pending collect — blocking or async — ends with
+        """Stop the run: workers halt within about one batch.
+
+        Advisory, as [`Task.cancel()`](`pymizu.Task.cancel`): the
+        outstanding tasks are cancelled — a queued task is skipped, a
+        running batch completes and its result is dropped. A pending
+        collect — blocking or async — ends with
         [`CancelledError`](`pymizu.CancelledError`). Safe to call more
-        than once."""
+        than once.
+        """
         if self._cancelled:
             return
         self._cancelled = True

@@ -1009,8 +1009,7 @@ class Pool:
         stream: bool = False,
         collect: str | None = None,
     ) -> _Any:
-        """Map ``fn`` over the elements of ``x`` on the pool; return the
-        run's [`Map`](`pymizu.Map`) handle.
+        """Map ``fn`` over ``x`` on the pool; return a map handle.
 
         Parameters
         ----------
@@ -1221,11 +1220,10 @@ class Pool:
         stream: bool = False,
         collect: str | None = None,
     ) -> _Any:
-        """Map ``fn`` over ``x``, unpacking each element as the call's
-        positional arguments: ``fn(*element, *args, **kwargs)``;
-        return the run's [`Map`](`pymizu.Map`) handle, as
-        [`map()`](`pymizu.Pool.map`).
+        """Map ``fn`` over ``x``, unpacking each element as call arguments.
 
+        ``fn(*element, *args, **kwargs)``; return the run's
+        [`Map`](`pymizu.Map`) handle, as [`map()`](`pymizu.Pool.map`).
         The `multiprocessing.Pool.starmap` convention; for the
         multi-iterable shape of `concurrent.futures.Executor.map`,
         zip first: ``pool.starmap(fn, zip(xs, ys))``. Elements must be
@@ -1269,8 +1267,7 @@ class Pool:
         n_chunks: int | None = None,
         stream: bool = False,
     ) -> PreparedMap:
-        """Stage a map once for repeated runs; return a
-        [`PreparedMap`](`pymizu.PreparedMap`).
+        """Stage a map once for repeated runs; return a `PreparedMap`.
 
         Takes the same arguments as [`map()`](`pymizu.Pool.map`) (minus
         ``seed``, ``timeout``, and ``collect`` — the per-run options,

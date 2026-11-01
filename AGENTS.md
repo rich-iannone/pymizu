@@ -546,9 +546,9 @@ tools/vendor-libmizu.sh` for a local checkout).
   and griffe reports "Could not parse line". Docs cells (guides and
   docstring examples) run in a Jupyter kernel that already has a running
   event loop: never `asyncio.run()` there — use top-level `await`.
-- Commit messages are a single line (subject only, no body).
-- Never push without explicit approval — every push must be approved by
-  the user first.
+- Commit messages: a short single-line summary, no body — describe the
+  change, don't enumerate every file or edit.
+- PR descriptions: brief, tidyverse-style plain English.
 
 ## Testing
 

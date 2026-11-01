@@ -203,7 +203,7 @@ On an R-worker pool, submitting a plain Python callable raises an error naming `
 Task errors cross as `TaskError` with the R error type preserved in `remote_type`.
 Arguments follow the same rules as channel payloads, zero-copy included: a large array crosses as one shared view, and an array that is already a received view crosses as its name alone.
 A pool's workers all run one language: mixing R and Python workers in one pool is not supported.
-The reverse direction mirrors this: `mizu::mizu_pool()` with `mizu::mizu_py_pool_launcher()`, and `mizu::mizu_submit_call()` with `mizu::mizu_call()` specs.
+The reverse direction mirrors this: `mizu::mizu_pool()` with `mizu::mizu_py_launcher()`, and `mizu::mizu_submit_call()` with `mizu::mizu_call()` specs.
 
 ## Mapping over a foreign pool
 

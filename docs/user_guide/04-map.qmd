@@ -3,7 +3,7 @@ title: "Parallel map"
 guide-section: "Guide"
 ---
 
-`Pool.map(fn, x)` maps `fn` over `x` on the pool and returns the run's handle immediately — the work is set up and submitted at the call; collecting happens on the handle.
+`Pool.map(fn, x)` maps `fn` over `x` on the pool and returns a `Map` handle immediately — the work is set up and submitted at the call; collecting happens on the handle.
 It is not a loop over `pool.submit()`.
 The function, its constant `args=`/`kwargs=`, and the data are written to shared memory once, and one *runner* task per worker divides up the elements:
 
@@ -16,7 +16,7 @@ with pymizu.Pool.create(4) as pool:
 result
 ```
 
-## The map handle
+## The `Map` handle
 
 A map collects exactly once, through the handle:
 
