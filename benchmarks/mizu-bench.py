@@ -144,7 +144,7 @@ while True:
 """
 
 print(
-    f"pymizu {pymizu.__version__} | core {pymizu.__core_version__} | "
+    f"pymizu {pymizu.__version__} | core {pymizu._core_version} | "
     f"Python {sys.version.split()[0]} | {sys.platform} {os.uname().machine}"
 )
 

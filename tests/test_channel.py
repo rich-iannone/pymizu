@@ -45,7 +45,7 @@ def test_version():
     import importlib.metadata
 
     assert pymizu.__version__ == importlib.metadata.version("pymizu")
-    assert pymizu.abi_version() == 1
+    assert pymizu._abi_version() == 1
 
 
 def test_echo_roundtrip(echo):

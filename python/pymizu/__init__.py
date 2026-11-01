@@ -39,15 +39,19 @@ from pymizu._pymizu import (
     TaskError,
     TaskLostError,
     WorkerDiedError,
-    __core_version__,
     _call_frame,
     _channel_attach,
     _channel_new,
     _pool_attach,
     _pool_new,
     _task_frame,
-    abi_version,
     is_sentinel,
+)
+from pymizu._pymizu import (
+    _abi_version as _abi_version,
+)
+from pymizu._pymizu import (
+    _core_version as _core_version,
 )
 from pymizu._pymizu import (
     _Task as Task,
@@ -1680,9 +1684,7 @@ __all__ = [
     "TaskError",
     "TaskLostError",
     "WorkerDiedError",
-    "__core_version__",
     "__version__",
-    "abi_version",
     "call",
     "current_pool",
     "current_rng",

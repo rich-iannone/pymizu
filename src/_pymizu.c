@@ -9024,7 +9024,7 @@ static PyObject *pymizu_is_sentinel(PyObject *Py_UNUSED(module), PyObject *x) {
 }
 
 PyDoc_STRVAR(abi_version_doc,
-"abi_version() -> int\n\n\
+"_abi_version() -> int\n\n\
 Wire-format ABI version of the compiled-in libmizu core.");
 
 static PyObject *pymizu_abi_version(PyObject *Py_UNUSED(module),
@@ -9150,7 +9150,7 @@ static PyMethodDef pymizu_methods[] = {
   {"_debug_export_spans", (PyCFunction) pymizu_debug_export_spans,
    METH_NOARGS, debug_export_spans_doc},
   {"_view_check", (PyCFunction) pymizu_view_check, METH_O, view_check_doc},
-  {"abi_version", (PyCFunction) pymizu_abi_version, METH_NOARGS, abi_version_doc},
+  {"_abi_version", (PyCFunction) pymizu_abi_version, METH_NOARGS, abi_version_doc},
   {"prune", (PyCFunction) pymizu_prune, METH_NOARGS, prune_doc},
   {"_tune_malloc", (PyCFunction) pymizu_tune_malloc, METH_NOARGS,
    tune_malloc_doc},
@@ -9325,7 +9325,7 @@ PyInit__pymizu(void)
       PyModule_AddObject(m, "_Pool", (PyObject *) &MizuPoolType) < 0 ||
       PyModule_AddObject(m, "_Task", (PyObject *) &MizuTaskType) < 0 ||
       PyModule_AddObject(m, "Sentinel", (PyObject *) &MizuSentinelType) < 0 ||
-      PyModule_AddStringConstant(m, "__core_version__",
+      PyModule_AddStringConstant(m, "_core_version",
                                  MIZU_VERSION_STRING) < 0 ||
       mizu_py_map_register(m, MizuError, MizuShmError) < 0 ||
       mizu_py_interop_register(m, MizuError, MizuDeclinedError) < 0 ||

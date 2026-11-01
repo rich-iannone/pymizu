@@ -3,7 +3,7 @@
 from collections.abc import Callable, Iterable
 from typing import Any
 
-__core_version__: str
+_core_version: str
 
 class Sentinel:
     """A terminal state returned as a value (identity-tested)."""
@@ -16,7 +16,7 @@ CLOSED: Sentinel
 PEER_GONE: Sentinel
 
 def is_sentinel(x: Any) -> bool: ...
-def abi_version() -> int: ...
+def _abi_version() -> int: ...
 def prune() -> list[str]: ...
 def _tune_malloc() -> None: ...
 

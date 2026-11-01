@@ -102,7 +102,6 @@ reference:
         - current_pool
         - current_rng
         - prune
-        - abi_version
 
 # Author metadata (landing page sidebar and citation page)
 authors:
