@@ -1076,11 +1076,12 @@ def test_steal_under_load(pool):
     assert pool.collect_all(tasks, timeout=30) == [i * 2 for i in range(20)]
 
 
-def test_status_and_dump(pool):
-    st = pool.status()
+def test_info_and_dump(pool):
+    st = pool.info()
     assert st["role"] == "controller"
     assert st["workers"] == ["live", "live"]
     assert st["max_workers"] == 2
+    assert st["token"] == pool.token  # the join identity rides the snapshot
     d = pool.dump()
     assert d["name"] == st["name"]
     assert len(d["workers"]) == 2
@@ -1231,7 +1232,7 @@ def test_retire_and_spawn():
     try:
         p.retire(0)
         deadline = time.monotonic() + 10
-        while p.status()["workers"][0] != "free":
+        while p.info()["workers"][0] != "free":
             assert time.monotonic() < deadline
             time.sleep(0.05)
         slots = p.spawn_workers(1)
@@ -1439,7 +1440,7 @@ def test_uncollected_handle_released(pool):
     gc.collect()
     deadline = time.monotonic() + 5
     while True:
-        if sum(pool.status()["tasks"].values()) == 0:
+        if sum(pool.info()["tasks"].values()) == 0:
             break
         assert time.monotonic() < deadline
         time.sleep(0.05)

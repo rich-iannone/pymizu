@@ -1353,7 +1353,7 @@ def _map_workers_gone(pool: pymizu.Pool) -> bool:
     all gone from the registry and no shutdown was broadcast (a clean
     stop surfaces through the handles). "claiming" counts as live — a
     joining worker is about to claim."""
-    st = pool.status()
+    st = pool.info()
     return not st["shutdown"] and not any(
         w in ("live", "claiming") for w in st["workers"]
     )

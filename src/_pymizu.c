@@ -7354,16 +7354,16 @@ static PyObject *state_list(const uint8_t *states, uint32_t n,
   return out;
 }
 
-PyDoc_STRVAR(pool_status_doc,
-"status() -> dict\n\n\
+PyDoc_STRVAR(pool_info_doc,
+"info() -> dict\n\n\
 A read-only wire-state snapshot: registry states, parked-worker count,\n\
 queued injection entries, and result-slot occupancy.");
 
-static PyObject *Pool_status(MizuPool *self, PyObject *Py_UNUSED(args)) {
+static PyObject *Pool_info(MizuPool *self, PyObject *Py_UNUSED(args)) {
   mizu_pool *p = pool_get(self);
   if (p == NULL) return NULL;
-  mizu_pool_status st;
-  if (mizu_pool_status_get(p, &st) != MIZU_OK) return pool_raise(p);
+  mizu_pool_info st;
+  if (mizu_pool_info_get(p, &st) != MIZU_OK) return pool_raise(p);
   PyObject *d = PyDict_New();
   if (d == NULL) return NULL;
   const char *role = st.role == MIZU_ROLE_CONTROLLER ? "controller" :
@@ -7426,7 +7426,7 @@ fail:
 PyDoc_STRVAR(pool_dump_doc,
 "dump() -> dict\n\n\
 A read-only debugging snapshot of the whole pool region, one level deeper\n\
-than status(): per-slot registry detail, every occupied result slot, and\n\
+than info(): per-slot registry detail, every occupied result slot, and\n\
 the handle-local machinery under `local`. States can move mid-fill.");
 
 static PyObject *dump_worker(const mizu_pool_dump *d, uint32_t i) {
@@ -7443,7 +7443,7 @@ static PyObject *dump_worker(const mizu_pool_dump *d, uint32_t i) {
                    (const char *[]) {"running", "idle", "parked",
                                      "waking"}[ps] : "unknown") < 0 ||
       dict_set(r, "parked", (unsigned long long)
-               ((d->status.parked_mask >> i) & 1)) < 0 ||
+               ((d->info.parked_mask >> i) & 1)) < 0 ||
       dict_set_sll(r, "top", (long long) w->deque_top) < 0 ||
       dict_set_sll(r, "bottom", (long long) w->deque_bottom) < 0 ||
       dict_set_sll(r, "in_flight", (long long) w->in_flight_rs) < 0 ||
@@ -7511,7 +7511,7 @@ static PyObject *Pool_dump(MizuPool *self, PyObject *Py_UNUSED(args)) {
   {
     /* every non-FREE result slot, paged in one call (result_slots rows is
        always enough) */
-    uint32_t cap = d.status.result_slots;
+    uint32_t cap = d.info.result_slots;
     mizu_rs_row *rows = PyMem_Malloc((size_t) (cap != 0 ? cap : 1) *
                                     sizeof(mizu_rs_row));
     if (rows == NULL) {
@@ -7554,9 +7554,9 @@ static PyObject *Pool_dump(MizuPool *self, PyObject *Py_UNUSED(args)) {
                (unsigned long long) d.collect_parks) < 0 ||
       dict_set(local, "notify_sends",
                (unsigned long long) d.notify_sends) < 0 ||
-      dict_set_str(out, "name", d.status.name) < 0 ||
+      dict_set_str(out, "name", d.info.name) < 0 ||
       dict_set(out, "shutdown",
-               (unsigned long long) (d.status.shutdown != 0)) < 0 ||
+               (unsigned long long) (d.info.shutdown != 0)) < 0 ||
       dict_set(out, "help", (unsigned long long) (d.help_wanted != 0)) < 0 ||
       PyDict_SetItemString(out, "workers", workers) < 0 ||
       PyDict_SetItemString(out, "submitters", submitters) < 0 ||
@@ -7758,8 +7758,8 @@ static PyObject *Pool_map_caps(MizuPool *self, PyObject *Py_UNUSED(args)) {
   uint32_t free_rs, inj_cap, inline_entry;
   if (mizu_pool_map_caps(p, &free_rs, &inj_cap, &inline_entry) != 0)
     return pool_raise(p);
-  mizu_pool_status st;
-  if (mizu_pool_status_get(p, &st) != MIZU_OK) return pool_raise(p);
+  mizu_pool_info st;
+  if (mizu_pool_info_get(p, &st) != MIZU_OK) return pool_raise(p);
   uint32_t live = 0;
   for (uint32_t i = 0; i < st.max_workers; i++)
     live += st.worker_state[i] == MIZU_WK_LIVE;
@@ -8134,7 +8134,7 @@ static PyMethodDef Pool_methods[] = {
   {"run", (PyCFunction) Pool_run, METH_NOARGS, pool_run_doc},
   {"leave", (PyCFunction) Pool_leave, METH_NOARGS, pool_leave_doc},
   {"lame_duck", (PyCFunction) Pool_lame_duck, METH_NOARGS, pool_lame_duck_doc},
-  {"status", (PyCFunction) Pool_status, METH_NOARGS, pool_status_doc},
+  {"info", (PyCFunction) Pool_info, METH_NOARGS, pool_info_doc},
   {"dump", (PyCFunction) Pool_dump, METH_NOARGS, pool_dump_doc},
   {"stats", (PyCFunction) Pool_stats, METH_NOARGS, pool_stats_doc},
   {"set_trace", (PyCFunction) Pool_set_trace, METH_O, pool_set_trace_doc},

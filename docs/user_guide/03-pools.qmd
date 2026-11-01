@@ -182,7 +182,7 @@ Attached submitters submit and collect exactly as the creator does.
 Four read-only tools watch a running pool without disturbing it:
 
 ```python
-pool.status()   # snapshot: worker states, queued tasks, result slots
+pool.info()   # snapshot: worker states, queued tasks, result slots
 pool.stats()    # cumulative counters since each participant joined
 pool.dump()     # every slot in full detail — the first tool when a pool hangs
 pool.trace(fn)  # fn(event, id) at each task lifecycle event; None removes it

@@ -1350,7 +1350,7 @@ class Pool:
         # the role gate precedes the launcher: a non-controller's spawn
         # would error only at the join wait, after real worker processes
         # had started
-        st = self.status()
+        st = self.info()
         if st["role"] != "controller":
             raise MizuError("pymizu: only the controller can resize a pool")
         free = [i for i, s in enumerate(st["workers"]) if s == "free"]
@@ -1416,9 +1416,12 @@ class Pool:
             )
         return self._h.destroy()
 
-    def status(self) -> dict:
-        """A read-only snapshot of the pool's state (dict)."""
-        return self._h.status()
+    def info(self) -> dict:
+        """A read-only snapshot of the pool's state (dict), including
+        the ``token`` to pass to [`Pool.attach()`](`pymizu.Pool.attach`)."""
+        d = self._h.info()
+        d["token"] = self.token
+        return d
 
     def dump(self) -> dict:
         """A read-only debugging snapshot of the whole pool region (dict)."""

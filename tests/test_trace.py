@@ -60,7 +60,7 @@ def test_trace_hook_cycle_is_garbage_collected():
     # the GC sees and collects it (P-09)
     def make():
         p = pymizu.Pool.create(1)
-        p.trace(lambda ev, tid: p.status())
+        p.trace(lambda ev, tid: p.info())
         return weakref.ref(p)
 
     wr = make()

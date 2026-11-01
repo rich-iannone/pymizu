@@ -178,14 +178,14 @@ def test_pool_spawn_workers_controller_only():
                     startup_timeout=0.2,
                 )
             assert calls == []
-            assert pool.status()["workers"] == ["live", "free"]
+            assert pool.info()["workers"] == ["live", "free"]
         finally:
             attached.destroy()
 
 
 def test_pool_status_dump():
     with pymizu.Pool.create(1) as pool:
-        assert isinstance(pool.status(), dict)
+        assert isinstance(pool.info(), dict)
         assert isinstance(pool.dump(), dict)
 
 
