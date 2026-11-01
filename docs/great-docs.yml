@@ -1,7 +1,17 @@
 # Great Docs configuration
 # See https://posit-dev.github.io/great-docs/user-guide/configuration.html
 
-display_name: pymizu ミズ
+display_name: pymizu
+
+# Navbar + favicon use the icon; the full logo (logo.svg / logo-dark.svg)
+# is for content surfaces
+logo:
+  light: assets/logo-icon.svg
+  dark: assets/logo-icon.svg
+
+# No hero banner on the landing page (the logo already sits in the content)
+hero:
+  enabled: false
 
 # Docstrings are NumPy-style (Parameters / Returns / Examples sections)
 parser: numpy

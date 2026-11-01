@@ -1,15 +1,10 @@
 ---
-title: "pymizu ミズ"
+title: "pymizu"
 subtitle: "Zero-copy async and parallel IPC across Python and R"
 ---
 
-```
-      ________
-     /\       \
-    /  \ pymizu\
-    \  / ミズ  /
-     \/_______/
-```
+<img src="assets/logo.svg" class="light-content" align="right" width="240" alt="pymizu logo"/>
+<img src="assets/logo-dark.svg" class="dark-content" align="right" width="240" alt="pymizu logo"/>
 
 pymizu uses shared memory to make communication between Python processes fast enough to parallelize work at thread granularity.
 
