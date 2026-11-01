@@ -14,13 +14,12 @@
 
 pymizu uses shared memory to make communication between Python processes fast enough to parallelize work at thread granularity.
 
-Task round trips drop from around 100 µs over sockets to under a microsecond — two orders of magnitude (see [Benchmarks](#benchmarks)).
-The hot path never enters the kernel and data is never copied through a system socket.
+Task round trips drop from ~100 µs over sockets to < 1 µs — two orders of magnitude (see [Benchmarks](#benchmarks)). Common data structures like lists, dicts, numpy arrays, and Arrow tables can be shared between Python and R as zero-copy views.
 
 In the default CPython build, the GIL runs CPU-bound threads on one core at a time, so compute parallelism in Python usually means multiple processes.
 Processes also isolate failures: a worker that crashes does not take the host down with it.
 
-Channels and work-stealing task pools run over POSIX shared memory (Linux, macOS) or Win32 file mappings (Windows): lock-free single-producer single-consumer rings with batched publication, spin-then-park waiting, and peer death delivered as an OS event.
+Channels and work-stealing task pools run over POSIX shared memory (Linux, macOS) or Win32 file mappings (Windows): lock-free single-producer single-consumer rings with batched publication, spin-then-park waiting with the hot path bypassing the kernel, and peer death delivered as an OS event.
 
 pymizu is built on [libmizu](https://github.com/shikokuchuo/libmizu), a C library for lock-free shared-memory IPC.
 [mizu](https://github.com/shikokuchuo/mizu) binds the same core for R, so Python and R can talk to each other.
@@ -31,7 +30,7 @@ pymizu is built on [libmizu](https://github.com/shikokuchuo/libmizu), a C librar
 - Reproducible parallel random numbers (`seed=`) — identical results for any worker count or steal order
 - Nested parallel maps — a task can map over its own pool, deadlock-free
 
-> **Pre-release.** The API is not stable and may change at any time before a release.
+> **Pre-release.** The API is not yet stable and we may make changes in response to feedback.
 
 ## Installation
 
@@ -41,7 +40,7 @@ Install the development version from GitHub:
 pip install git+https://github.com/shikokuchuo/pymizu
 ```
 
-Requires Python 3.10 or later on a 64-bit platform (Linux: kernel 5.3 or later; Windows: clang-cl to build).
+Requires Python 3.10 or later on a 64-bit platform.
 The extension compiles the vendored C core, so no system library is necessary.
 
 Optional extras:
@@ -101,21 +100,22 @@ with pymizu.PoolExecutor.create(4) as ex:
 
 ## Parallel map
 
-`Pool.map(fn, x)` maps `fn` over `x` on the pool and returns the results in order.
+`Pool.map(fn, x)` maps `fn` over `x` on the pool and returns a `Map` handle immediately, just as `Pool.submit()` returns a task. `collect()` on the handle waits and returns the values in order.
 The function and data cross into shared memory once.
-Workers divide the elements among themselves.
+Workers divide the elements among themselves, claiming ranges from a shared cursor.
 
 A map also nests — the mapped function can map over its own pool with `pymizu.current_pool()`, deadlock-free.
 
 ```python
 with pymizu.Pool.create(4) as pool:
-    print(pool.map(abs, range(-5, 5)))
+    m = pool.map(abs, range(-5, 5))
+    print(m.collect())
 ```
 
 ## R interop
 
 Pool workers can be R processes that run the [mizu](https://github.com/shikokuchuo/mizu) package, the R binding of the same core.
-`pymizu.r_launcher()` spawns them and `pymizu.call()` describes the task — here R's built-in `mtcars` summarized by R itself, read back into polars:
+`pymizu.r_launcher()` spawns them and `pymizu.call()` specifies the task. Here, R's built-in `mtcars` is summarized in R and read back into polars:
 
 ```python
 import polars as pl
@@ -133,7 +133,7 @@ with pymizu.Pool.create(4, launcher=pymizu.r_launcher()) as pool:
 - Arrow data (pyarrow tables and record batch readers, or any `__arrow_c_stream__` producer) crosses the same way
 
 The full contract — the portable subset, `pymizu.Frame`, zero-copy frames, and the dtype matrix — is on the [R interop](https://shikokuchuo.net/pymizu/user-guide/interop.html) page.
-The mizu README shows the reverse direction: an R host that drives Python workers with `mizu_py_pool_launcher()`.
+The mizu README shows the reverse direction: an R host that drives Python workers with `mizu_py_launcher()`.
 
 ## Documentation
 

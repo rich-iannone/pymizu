@@ -60,7 +60,7 @@ if TYPE_CHECKING:
     import numpy as _np
 
     from pymizu._dimarray import DimArray
-    from pymizu._map import PreparedMap
+    from pymizu._map import Map, PreparedMap
 
 try:
     __version__ = _metadata.version("pymizu")
@@ -1010,7 +1010,7 @@ class Pool:
         collect: str | None = None,
     ) -> _Any:
         """Map ``fn`` over the elements of ``x`` on the pool; return the
-        run's map handle.
+        run's [`Map`](`pymizu.Map`) handle.
 
         Parameters
         ----------
@@ -1049,9 +1049,10 @@ class Pool:
 
         Returns
         -------
-            The run's map handle. ``handle.collect()`` blocks for the
-            results — a list in input order, or with ``template`` the
-            gathered output area (a view with ``collect="view"``) —
+            A [`Map`](`pymizu.Map`) handle. ``handle.collect()`` blocks
+            for the results — a list in input order, or with
+            ``template`` the gathered output area (a view with
+            ``collect="view"``) —
             raising the errors below; ``handle.collect_async()`` /
             ``await handle`` resolves one `asyncio.Future` with the same
             results (not on a streaming map: its sliding task window
@@ -1222,7 +1223,8 @@ class Pool:
     ) -> _Any:
         """Map ``fn`` over ``x``, unpacking each element as the call's
         positional arguments: ``fn(*element, *args, **kwargs)``;
-        return the run's map handle, as [`map()`](`pymizu.Pool.map`).
+        return the run's [`Map`](`pymizu.Map`) handle, as
+        [`map()`](`pymizu.Pool.map`).
 
         The `multiprocessing.Pool.starmap` convention; for the
         multi-iterable shape of `concurrent.futures.Executor.map`,
@@ -1276,9 +1278,10 @@ class Pool:
         The set-up — pickling the description, creating the shared
         region, the worker-side attach — is paid once here; each
         ``pm.run()`` re-arms cheaply, reuses the workers' cached
-        set-up, and returns the run's map handle (the collect happens
-        on it). A run collected with ``collect="view"`` hands its
-        region to the view, so the next run stages a fresh one. With
+        set-up, and returns the run's [`Map`](`pymizu.Map`) handle
+        (the collect happens on it). A run collected with
+        ``collect="view"`` hands its region to the view, so the next
+        run stages a fresh one. With
         ``stream=True`` the staged ``x`` stays on the submitter, so a
         replacement ``x`` of any shape simply re-slices — only a length
         change under ``template`` stages fresh shared memory (the
@@ -1615,6 +1618,10 @@ def using_pool(pool: Pool | None) -> _Generator[Pool | None, None, None]:
 def __getattr__(name: str) -> _Any:
     # Lazy re-export: pymizu._map try-imports numpy, which stays deferred
     # until the first map call rather than pymizu's own import.
+    if name == "Map":
+        from pymizu._map import Map
+
+        return Map
     if name == "PreparedMap":
         from pymizu._map import PreparedMap
 
@@ -1639,6 +1646,7 @@ __all__ = [
     "DeclinedError",
     "DimArray",
     "Frame",
+    "Map",
     "Pool",
     "PoolExecutor",
     "PreparedMap",

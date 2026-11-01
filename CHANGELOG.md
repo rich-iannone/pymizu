@@ -25,8 +25,8 @@ Initial release.
   `WorkerDiedError`, `TaskLostError`) instead of pickled exceptions.
 - `Pool.map()`: a parallel map over a shared staging region — adaptive
   batching, streaming and prepared maps, `template=` output areas with a
-  zero-copy `collect="view"`, deterministic per-element seeding, and
-  handle-first `collect()` / `collect_async()` / `cancel()`.
+  zero-copy `collect="view"`, deterministic per-element seeding, and a
+  public `Map` handle with `collect()` / `collect_async()` / `cancel()`.
 - `PoolExecutor`: a `concurrent.futures` adapter resolving futures
   event-driven off the pool's notify endpoint — no drain thread, and
   thread-free `asyncio.wrap_future` interop.

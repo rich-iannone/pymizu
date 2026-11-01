@@ -39,6 +39,7 @@ reference:
       contents:
         - Pool
         - Task
+        - Map
         - PreparedMap
         - PoolExecutor
     - title: Cross-language interop

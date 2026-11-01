@@ -771,9 +771,9 @@ def pool_map(
     template: _Any = None,
     collect: str | None = None,
     stream: bool = False,
-) -> _Map | _pymizu.Sentinel:
+) -> Map | _pymizu.Sentinel:
     """The one map entry: stage, submit the runners (or blob chunks, or
-    the streaming window's first fill), and return the `_Map` handle —
+    the streaming window's first fill), and return the `Map` handle —
     collection is the handle's (`collect()` blocking, `collect_async()`
     event-driven). `timeout` bounds submission only: on its expiry the
     tasks already in are cancelled and the TIMEOUT sentinel returns (no
@@ -786,7 +786,7 @@ def pool_map(
     collect_mode = _resolve_collect(plan, collect)
     probe, x, n = _probe_x(plan.spec, x, plan.convert, plan.stream)
     if n == 0:
-        return _Map._empty(pool, plan)
+        return Map._empty(pool, plan)
 
     live, free_rs, inj_cap, inline_entry = pool._h._map_caps()
     if free_rs == 0:
@@ -816,7 +816,7 @@ def pool_map(
         if len(worst) <= inline_entry:
             blob = cand
 
-    m = _Map(pool, plan)
+    m = Map(pool, plan)
     m.seed = seed_spec
     m.collect_mode = collect_mode
     m.n = n
@@ -1503,16 +1503,17 @@ def _collect_region(
     return out
 
 
-class _Map:
-    """A staged, submitted map — the handle-first return of `pool_map`
-    and `PreparedMap.run`: collection happens exactly once, through the
-    handle. `collect()` blocks; `collect_async()` / `await` resolves one
-    asyncio Future when the results arrive (never on a streaming map —
-    its sliding task window advances in the blocking collect loop);
-    `cancel()` stops the run: workers halt within about one batch and
-    the outstanding tasks are cancelled. A dropped uncollected handle
-    cancels at GC, so no run of fn is wasted. One collection per handle,
-    as for tasks."""
+class Map:
+    """A staged, submitted map — the handle-first return of
+    [`Pool.map()`](`pymizu.Pool.map`) and
+    [`PreparedMap.run()`](`pymizu.PreparedMap.run`): collection happens
+    exactly once, through the handle. `collect()` blocks;
+    `collect_async()` / `await` resolves one asyncio Future when the
+    results arrive (never on a streaming map — its sliding task window
+    advances in the blocking collect loop); `cancel()` stops the run:
+    workers halt within about one batch and the outstanding tasks are
+    cancelled. A dropped uncollected handle cancels at GC, so no run of
+    fn is wasted. One collection per handle, as for tasks."""
 
     __slots__ = (
         "pool",
@@ -1558,7 +1559,7 @@ class _Map:
         self._transferred = False  # a view collect owns the region
 
     @classmethod
-    def _empty(cls, pool: pymizu.Pool, plan: _Plan) -> _Map:
+    def _empty(cls, pool: pymizu.Pool, plan: _Plan) -> Map:
         """The length-0 map: a handle like any other (the return type
         never varies), whose collect yields the empty result. No region,
         no tasks — nothing to cancel."""
@@ -2226,7 +2227,7 @@ class PreparedMap:
         | None = None,
         timeout: float | None = None,
         collect: str | None = None,
-    ) -> _Map | _pymizu.Sentinel:
+    ) -> Map | _pymizu.Sentinel:
         """Run the prepared map once; return the run's map handle.
 
         Parameters
@@ -2275,7 +2276,7 @@ class PreparedMap:
         if x is not None:
             self._swap_x(x)
         if self._n == 0:
-            return _Map._empty(self._pool, self._plan)
+            return Map._empty(self._pool, self._plan)
         if self._capsule is None:
             # a view-collected run transferred the region: restage fresh
             self._stage()
@@ -2292,7 +2293,7 @@ class PreparedMap:
         remaining, expired = _deadline(timeout)
         name = self._name
         assert name is not None  # n > 0 stages at prepare / restage above
-        m = _Map(pool, self._plan)
+        m = Map(pool, self._plan)
         m.pm = self
         m.n = self._n
         m.live = live
