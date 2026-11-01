@@ -270,6 +270,19 @@ _Task()
 
 A task handle from Pool.submit(). Collected exactly once; an uncollected handle's finalizer releases its slot.
 
+Map(pool: 'pymizu.Pool', plan: '_Plan') -> 'None'
+
+A staged, submitted map — the handle-first return of
+[`Pool.map()`](`pymizu.Pool.map`) and
+[`PreparedMap.run()`](`pymizu.PreparedMap.run`): collection happens
+exactly once, through the handle. `collect()` blocks;
+`collect_async()` / `await` resolves one asyncio Future when the
+results arrive (never on a streaming map — its sliding task window
+advances in the blocking collect loop); `cancel()` stops the run:
+workers halt within about one batch and the outstanding tasks are
+cancelled. A dropped uncollected handle cancels at GC, so no run of
+fn is wasted. One collection per handle, as for tasks.
+
 PreparedMap(pool: 'pymizu.Pool', fn: '_Callable[..., _Any]', x: '_Any', *, args: '_Any' = (), kwargs: 'dict | None' = None, n_chunks: 'int | None' = None, template: '_Any' = None, stream: 'bool' = False) -> 'None'
 
 A map set up once in shared memory, run many times.
@@ -636,7 +649,7 @@ Returns
 map(self, fn: '_Callable[..., _Any]', x: '_Iterable[_Any]', *, args: '_Iterable[_Any]' = (), kwargs: 'dict[str, _Any] | None' = None, template: '_Any' = None, n_chunks: 'int | None' = None, seed: 'int | bytes | bytearray | tuple[int | bytes | bytearray, int] | None' = None, timeout: 'float | None' = None, stream: 'bool' = False, collect: 'str | None' = None) -> '_Any'
 
 Map ``fn`` over the elements of ``x`` on the pool; return the
-run's map handle.
+run's [`Map`](`pymizu.Map`) handle.
 
 Parameters
 ----------
@@ -675,9 +688,10 @@ collect
 
 Returns
 -------
-    The run's map handle. ``handle.collect()`` blocks for the
-    results — a list in input order, or with ``template`` the
-    gathered output area (a view with ``collect="view"``) —
+    A [`Map`](`pymizu.Map`) handle. ``handle.collect()`` blocks
+    for the results — a list in input order, or with
+    ``template`` the gathered output area (a view with
+    ``collect="view"``) —
     raising the errors below; ``handle.collect_async()`` /
     ``await handle`` resolves one `asyncio.Future` with the same
     results (not on a streaming map: its sliding task window
@@ -816,7 +830,8 @@ starmap(self, fn: '_Callable[..., _Any]', x: '_Iterable[_Any]', *, args: '_Itera
 
 Map ``fn`` over ``x``, unpacking each element as the call's
 positional arguments: ``fn(*element, *args, **kwargs)``;
-return the run's map handle, as [`map()`](`pymizu.Pool.map`).
+return the run's [`Map`](`pymizu.Map`) handle, as
+[`map()`](`pymizu.Pool.map`).
 
 The `multiprocessing.Pool.starmap` convention; for the
 multi-iterable shape of `concurrent.futures.Executor.map`,
@@ -838,9 +853,10 @@ which move to [`PreparedMap.run()`](`pymizu.PreparedMap.run`)).
 The set-up — pickling the description, creating the shared
 region, the worker-side attach — is paid once here; each
 ``pm.run()`` re-arms cheaply, reuses the workers' cached
-set-up, and returns the run's map handle (the collect happens
-on it). A run collected with ``collect="view"`` hands its
-region to the view, so the next run stages a fresh one. With
+set-up, and returns the run's [`Map`](`pymizu.Map`) handle
+(the collect happens on it). A run collected with
+``collect="view"`` hands its region to the view, so the next
+run stages a fresh one. With
 ``stream=True`` the staged ``x`` stays on the submitter, so a
 replacement ``x`` of any shape simply re-slices — only a length
 change under ``template`` stages fresh shared memory (the
@@ -1483,6 +1499,9 @@ pip install "pymizu[numpy] @ git+https://github.com/shikokuchuo/pymizu"
 ```
 
 ## Deploying on Linux
+
+pymizu requires Linux kernel 5.3 or later.
+The death of a peer is detected through `pidfd_open`, with no fallback for older kernels.
 
 On Linux, POSIX shared memory is `/dev/shm`, a bounded tmpfs mount.
 Everything pymizu creates must fit in it: pool and channel regions, plus the regions that carry larger payloads.

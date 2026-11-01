@@ -4,7 +4,7 @@ Map `fn` over the elements of `x` on the pool; return the
 
 Usage
 
-[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L994-L1203)
+[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L994-L1204)
 
 ``` python
 Pool.map(
@@ -22,7 +22,7 @@ Pool.map(
 )
 ```
 
-run's map handle.
+run's [`Map`](../reference/Map.md#pymizu.Map) handle.
 
 ## Parameters
 
@@ -58,8 +58,8 @@ Stream slices of `x` to workers instead of writing the whole of `x` to shared me
 
 ## Returns
 
-`The run's map handle. handle.collect() blocks for the`  
-results -- a list in input order, or with `template` the gathered output area (a view with `collect="view"`) -- raising the errors below; `handle.collect_async()` / `await handle` resolves one `asyncio.Future` with the same results (not on a streaming map: its sliding task window advances in the blocking collect loop, so it collects blocking only); `handle.cancel()` stops the run. On `timeout` expiry mid-submission, [map()](../reference/Pool.map.md#pymizu.Pool.map) itself returns the `TIMEOUT` sentinel (no handle); a length-0 `x` returns a handle whose collect yields the empty result.
+`A Map handle. handle.collect() blocks`  
+for the results -- a list in input order, or with `template` the gathered output area (a view with `collect="view"`) -- raising the errors below; `handle.collect_async()` / `await handle` resolves one `asyncio.Future` with the same results (not on a streaming map: its sliding task window advances in the blocking collect loop, so it collects blocking only); `handle.cancel()` stops the run. On `timeout` expiry mid-submission, [map()](../reference/Pool.map.md#pymizu.Pool.map) itself returns the `TIMEOUT` sentinel (no handle); a length-0 `x` returns a handle whose collect yields the empty result.
 
 ## Raises
 
@@ -85,7 +85,7 @@ One call writes `fn`, the constant `args`/`kwargs`, and `x` to shared memory exa
 
 `template` declares that every `fn` result is `m` values of the example buffer's dtype: results are written in place into a shared `n x m` output area and never serialized. Each result must be a matching buffer -- or, for `m == 1`, a plain Python scalar. With a template, `collect="copy"` (the default) returns the area as one gathered numpy array (a memoryview without numpy) of shape `(n, m)` -- `(n,)` for `m == 1`; `collect="view"` returns it zero-copy, and the shared memory is released only when the view is gone.
 
-With `stream=True`, the map never writes the whole of `x` to shared memory: it streams slices of `x` to workers as they take work; the return value is unchanged. Slices travel as ordinary chunk tasks under a sliding submit/collect window of at most `min(n_chunks, 2 * live workers, free result slots)` outstanding tasks, so shared-memory use is bounded by `window x slice` instead of `sizeof(x)` -- with the default chunk count (`min(len(x), 32 * live workers)`) that is roughly `(2 * workers) / n_chunks` of the serialized `x`. `n_chunks=` overrides the chunk count (`n_chunks=len(x)` is the extreme of one element per task). Everything else -- result order, `template` and [collect](../reference/Task.collect.md#pymizu.Task.collect), `seed` reproducibility, the errors -- is exactly the non-streaming map's. The trade-offs: failure detection coarsens from about one adaptive batch to about one chunk (the bound moves with `n_chunks`); the adaptive batch sizing is lost (raise `n_chunks` to reduce skew); and slices are serialized like ordinary task payloads instead of the zero-copy path a raw array gets. A streaming map with Python workers shares one description of the map with every worker, each read at most once. A [`call`](../reference/call.md#pymizu.call) spec as `fn` streams too, over workers of any language: each chunk in the window writes a small shared-memory region of its own (the slice plus the task that runs on it, one runner task per chunk), removed as soon as the chunk completes. Shared-memory use stays bounded by the window plus a small per-worker cache rather than by `sizeof(x)`. Each chunk also writes its results separately, so they cannot combine into one view: `collect="view"` raises `TypeError` on a streaming spec map, as does preparing one with [`map_prepare()`](../reference/Pool.map_prepare.md#pymizu.Pool.map_prepare).
+With `stream=True`, the map never writes the whole of `x` to shared memory: it streams slices of `x` to workers as they take work; the return value is unchanged. Slices travel as ordinary chunk tasks under a sliding submit/collect window of at most `min(n_chunks, 2 * live workers, free result slots)` outstanding tasks, so shared-memory use is bounded by `window x slice` instead of `sizeof(x)` -- with the default chunk count (`min(len(x), 32 * live workers)`) that is roughly `(2 * workers) / n_chunks` of the serialized `x`. `n_chunks=` overrides the chunk count (`n_chunks=len(x)` is the extreme of one element per task). Everything else -- result order, `template` and `collect`, `seed` reproducibility, the errors -- is exactly the non-streaming map's. The trade-offs: failure detection coarsens from about one adaptive batch to about one chunk (the bound moves with `n_chunks`); the adaptive batch sizing is lost (raise `n_chunks` to reduce skew); and slices are serialized like ordinary task payloads instead of the zero-copy path a raw array gets. A streaming map with Python workers shares one description of the map with every worker, each read at most once. A [`call`](../reference/call.md#pymizu.call) spec as `fn` streams too, over workers of any language: each chunk in the window writes a small shared-memory region of its own (the slice plus the task that runs on it, one runner task per chunk), removed as soon as the chunk completes. Shared-memory use stays bounded by the window plus a small per-worker cache rather than by `sizeof(x)`. Each chunk also writes its results separately, so they cannot combine into one view: `collect="view"` raises `TypeError` on a streaming spec map, as does preparing one with [`map_prepare()`](../reference/Pool.map_prepare.md#pymizu.Pool.map_prepare).
 
 `timeout` bounds submission only (the wait for queue space while the tasks go out); the collection deadline is the handle's `collect(timeout)`, whose expiry cancels the outstanding work and returns the `TIMEOUT` sentinel, never raised.
 

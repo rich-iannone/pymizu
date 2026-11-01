@@ -29,6 +29,8 @@ pip install "pymizu[numpy] @ git+https://github.com/shikokuchuo/pymizu"
 
 ## Deploying on Linux
 
+pymizu requires Linux kernel 5.3 or later. The death of a peer is detected through `pidfd_open`, with no fallback for older kernels.
+
 On Linux, POSIX shared memory is `/dev/shm`, a bounded tmpfs mount. Everything pymizu creates must fit in it: pool and channel regions, plus the regions that carry larger payloads. Container runtimes set it to 64 MB by default. Use `docker run --shm-size=4g`, or the equivalent in your orchestrator. Size it to your peak in-flight payload traffic.
 
 ## Linux memory allocator

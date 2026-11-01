@@ -340,6 +340,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../reference/Map.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Map</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../reference/PreparedMap.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">PreparedMap</span></a>
   </div>
@@ -831,7 +837,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div class="doc-usage-source">
 <p>Usage</p>
-<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_map.py#L2008-L2359" target="_blank" rel="noopener">Source</a></p>
+<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_map.py#L2009-L2360" target="_blank" rel="noopener">Source</a></p>
 </div>
 <div class="doc-signature doc-class">
 <div class="sourceCode" id="cb1"><pre class="sourceCode pythonsignature"><code class="sourceCode pythonsignature"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">PreparedMap</span>(</span>
@@ -883,7 +889,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </dd>
 <dt><code><span class="doc-parameter-name">stream</span><span class="doc-parameter-annotation-sep">:</span> <span class="doc-parameter-annotation">bool</span> <span class="doc-parameter-default-sep op">=</span> <span class="doc-parameter-default"><span class="va">False</span></span></code></dt>
 <dd>
-Stream slices of <code>x</code> instead of writing it to shared memory whole — as for <a href="../reference/Pool.map.html#pymizu.Pool.map" class="gdls-link"><code>Pool.map()</code></a>. The map is set up here; <code>seed</code> and <a href="../reference/Task.collect.html#pymizu.Task.collect" class="gdls-link gdls-code">collect</a> are per-run options of <a href="../reference/PreparedMap.html#pymizu.PreparedMap.run" class="gdls-link"><code>PreparedMap.run()</code></a> (mirroring mizu’s <code>mizu_map_run()</code>).
+Stream slices of <code>x</code> instead of writing it to shared memory whole — as for <a href="../reference/Pool.map.html#pymizu.Pool.map" class="gdls-link"><code>Pool.map()</code></a>. The map is set up here; <code>seed</code> and <code>collect</code> are per-run options of <a href="../reference/PreparedMap.html#pymizu.PreparedMap.run" class="gdls-link"><code>PreparedMap.run()</code></a> (mirroring mizu’s <code>mizu_map_run()</code>).
 </dd>
 </dl>
 </div>
@@ -891,7 +897,7 @@ Stream slices of <code>x</code> instead of writing it to shared memory whole —
 <section id="examples" class="level2 doc-examples">
 <h2 class="doc-examples anchored" data-anchor-id="examples">Examples</h2>
 <p>Set the map up once, then re-run it over replacement data at copy cost (same dtype and length swap in place):</p>
-<div id="2805a8ca" class="cell" data-execution_count="1">
+<div id="b2bdca2e" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pymizu</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -934,7 +940,7 @@ Stream slices of <code>x</code> instead of writing it to shared memory whole —
 </div>
 <div class="doc-usage-source">
 <p>Usage</p>
-<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_map.py#L2343-L2349" target="_blank" rel="noopener">Source</a></p>
+<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_map.py#L2344-L2350" target="_blank" rel="noopener">Source</a></p>
 </div>
 <div class="doc-signature doc-function">
 <div class="sourceCode" id="cb4"><pre class="sourceCode pythonsignature"><code class="sourceCode pythonsignature"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">close</span>()</span></code></pre></div>
@@ -950,7 +956,7 @@ Stream slices of <code>x</code> instead of writing it to shared memory whole —
 </div>
 <div class="doc-usage-source">
 <p>Usage</p>
-<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_map.py#L2218-L2341" target="_blank" rel="noopener">Source</a></p>
+<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_map.py#L2219-L2342" target="_blank" rel="noopener">Source</a></p>
 </div>
 <div class="doc-signature doc-function">
 <div class="sourceCode" id="cb5"><pre class="sourceCode pythonsignature"><code class="sourceCode pythonsignature"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">run</span>(</span>
@@ -975,7 +981,7 @@ Stream slices of <code>x</code> instead of writing it to shared memory whole —
 </dd>
 <dt><code><span class="doc-parameter-name">timeout</span><span class="doc-parameter-annotation-sep">:</span> <span class="doc-parameter-annotation">float | None</span> <span class="doc-parameter-default-sep op">=</span> <span class="doc-parameter-default">None</span></code></dt>
 <dd>
-<p>Seconds before the run’s submission gives up; on expiry the tasks already in are cancelled and the TIMEOUT <a href="../reference/Sentinel.html#pymizu.Sentinel" class="gdls-link"><code>Sentinel</code></a> is returned (no handle). The collection deadline is the handle’s <a href="../reference/Task.collect.html#pymizu.Task.collect" class="gdls-link gdls-code">collect()</a>.</p>
+<p>Seconds before the run’s submission gives up; on expiry the tasks already in are cancelled and the TIMEOUT <a href="../reference/Sentinel.html#pymizu.Sentinel" class="gdls-link"><code>Sentinel</code></a> is returned (no handle). The collection deadline is the handle’s <code>collect()</code>.</p>
 </dd>
 <dt><code><span class="doc-parameter-name">collect</span><span class="doc-parameter-annotation-sep">:</span> <span class="doc-parameter-annotation">str | None</span> <span class="doc-parameter-default-sep op">=</span> <span class="doc-parameter-default">None</span></code></dt>
 <dd>
@@ -990,7 +996,7 @@ Stream slices of <code>x</code> instead of writing it to shared memory whole —
 <dl>
 <dt><code> <span class="doc-parameter-annotation">The run’s map handle — collected exactly once, by</span></code></dt>
 <dd>
-<a href="../reference/Task.collect.html#pymizu.Task.collect" class="gdls-link gdls-code">collect()</a> (blocking) or <a href="../reference/Task.collect_async.html#pymizu.Task.collect_async" class="gdls-link gdls-code">collect_async()</a> (event-driven). A run is a producer on the pool handle: a concurrent run or submit from a second thread raises <a href="../reference/ConcurrentUseError.html#pymizu.ConcurrentUseError" class="gdls-link gdls-code">ConcurrentUseError</a>. A clean value collect keeps the set-up for the next run; a view collect hands the region to the view, and an interrupted run (timeout, an error, a worker death) drops it — the next run stages a fresh one either way.
+<code>collect()</code> (blocking) or <code>collect_async()</code> (event-driven). A run is a producer on the pool handle: a concurrent run or submit from a second thread raises <a href="../reference/ConcurrentUseError.html#pymizu.ConcurrentUseError" class="gdls-link gdls-code">ConcurrentUseError</a>. A clean value collect keeps the set-up for the next run; a view collect hands the region to the view, and an interrupted run (timeout, an error, a worker death) drops it — the next run stages a fresh one either way.
 </dd>
 </dl>
 </div>

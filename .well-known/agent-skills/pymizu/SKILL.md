@@ -50,6 +50,7 @@ A set of worker processes that divide submitted tasks among themselves.
 
 - `Pool`: A shared-memory work-stealing task pool handle (process-private)
 - `Task`: A task handle from Pool.submit(). Collected exactly once; an uncollected handle's finalizer releases its slot
+- `Map`: A staged, submitted map — the handle-first return of
 - `PreparedMap`: A map set up once in shared memory, run many times
 - `PoolExecutor`: A `concurrent.futures.Executor` over a pymizu pool
 

@@ -108,6 +108,8 @@
     "reference/Frame.row_names.md",
     "reference/Frame.to_dict.html",
     "reference/Frame.to_dict.md",
+    "reference/Map.html",
+    "reference/Map.md",
     "reference/MizuError.html",
     "reference/MizuError.md",
     "reference/Pool.__enter__.html",

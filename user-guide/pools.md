@@ -70,7 +70,7 @@ rest
 
 ## asyncio
 
-`await task` -- or `task.collect_async()` -- is the event-driven collect: an `asyncio.Future` resolving with the task's result (or raising the task's error), resolved when the result arrives -- no blocking, no polling. Cancelling the Future detaches the waiter -- a later blocking [collect()](../reference/Task.collect.md#pymizu.Task.collect) works again -- and never cancels the task (`task.cancel()` stays the explicit verb). A task with a pending async collect refuses blocking collects: one consumer per result.
+`await task` -- or `task.collect_async()` -- is the event-driven collect: an `asyncio.Future` resolving with the task's result (or raising the task's error), resolved when the result arrives -- no blocking, no polling. Cancelling the Future detaches the waiter -- a later blocking `collect()` works again -- and never cancels the task (`task.cancel()` stays the explicit verb). A task with a pending async collect refuses blocking collects: one consumer per result.
 
 `pool.collect_any_async(tasks)` and `pool.collect_all_async(tasks)` are the batch form: exactly one Future per collection, never one per task, re-checked whenever a task finishes. They behave like the sync verbs: collect-all resolves in input order and the first error by position rejects with `index`; collect-any resolves `(index, value)` for the first task to finish. There are no timeout arguments: use `asyncio.timeout` or `asyncio.wait_for`.
 

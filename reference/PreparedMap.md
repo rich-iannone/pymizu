@@ -4,7 +4,7 @@ A map set up once in shared memory, run many times.
 
 Usage
 
-[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_map.py#L2008-L2359)
+[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_map.py#L2009-L2360)
 
 ``` python
 PreparedMap(
@@ -46,7 +46,7 @@ Overrides the number of batches the elements are split into.
 An example buffer declaring each result's dtype and length -- as for [`Pool.map()`](../reference/Pool.map.md#pymizu.Pool.map).
 
 `stream: bool = False`  
-Stream slices of `x` instead of writing it to shared memory whole -- as for [`Pool.map()`](../reference/Pool.map.md#pymizu.Pool.map). The map is set up here; `seed` and [collect](../reference/Task.collect.md#pymizu.Task.collect) are per-run options of [`PreparedMap.run()`](../reference/PreparedMap.md#pymizu.PreparedMap.run) (mirroring mizu's `mizu_map_run()`).
+Stream slices of `x` instead of writing it to shared memory whole -- as for [`Pool.map()`](../reference/Pool.map.md#pymizu.Pool.map). The map is set up here; `seed` and `collect` are per-run options of [`PreparedMap.run()`](../reference/PreparedMap.md#pymizu.PreparedMap.run) (mirroring mizu's `mizu_map_run()`).
 
 ## Examples
 
@@ -80,7 +80,7 @@ Unlink the staged region (idempotent; the GC backstop is the
 
 Usage
 
-[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_map.py#L2343-L2349)
+[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_map.py#L2344-L2350)
 
 ``` python
 close()
@@ -94,7 +94,7 @@ Run the prepared map once; return the run's map handle.
 
 Usage
 
-[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_map.py#L2218-L2341)
+[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_map.py#L2219-L2342)
 
 ``` python
 run(
@@ -115,7 +115,7 @@ Replaces the staged data for this and later runs. When both the staged and the r
 Deterministic per-element seeding for this run, as for [`Pool.map()`](../reference/Pool.map.md#pymizu.Pool.map); `None` (the default) runs unseeded. The seed travels with the run's tasks, not the staged data, so reseeding a run is free -- the repeated-simulation loop varies `seed` per run while the set-up is paid once.
 
 `timeout: float | None = None`  
-Seconds before the run's submission gives up; on expiry the tasks already in are cancelled and the TIMEOUT [`Sentinel`](../reference/Sentinel.md#pymizu.Sentinel) is returned (no handle). The collection deadline is the handle's [collect()](../reference/Task.collect.md#pymizu.Task.collect).
+Seconds before the run's submission gives up; on expiry the tasks already in are cancelled and the TIMEOUT [`Sentinel`](../reference/Sentinel.md#pymizu.Sentinel) is returned (no handle). The collection deadline is the handle's `collect()`.
 
 `collect: str | None = None`  
 `"copy"` (the default) or `"view"`, which requires `template` -- as for [`Pool.map()`](../reference/Pool.map.md#pymizu.Pool.map). The choice is per run.
@@ -123,4 +123,4 @@ Seconds before the run's submission gives up; on expiry the tasks already in are
 #### Returns
 
 `The run's map handle -- collected exactly once, by`  
-[collect()](../reference/Task.collect.md#pymizu.Task.collect) (blocking) or [collect_async()](../reference/Task.collect_async.md#pymizu.Task.collect_async) (event-driven). A run is a producer on the pool handle: a concurrent run or submit from a second thread raises [ConcurrentUseError](../reference/ConcurrentUseError.md#pymizu.ConcurrentUseError). A clean value collect keeps the set-up for the next run; a view collect hands the region to the view, and an interrupted run (timeout, an error, a worker death) drops it -- the next run stages a fresh one either way.
+`collect()` (blocking) or `collect_async()` (event-driven). A run is a producer on the pool handle: a concurrent run or submit from a second thread raises [ConcurrentUseError](../reference/ConcurrentUseError.md#pymizu.ConcurrentUseError). A clean value collect keeps the set-up for the next run; a view collect hands the region to the view, and an interrupted run (timeout, an error, a worker death) drops it -- the next run stages a fresh one either way.

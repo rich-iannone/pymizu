@@ -64,6 +64,9 @@ A shared-memory work-stealing task pool handle (process-private).
 [Task](Task.md#pymizu.Task)  
 A task handle from Pool.submit(). Collected exactly once; an uncollected handle's finalizer releases its slot.
 
+[Map](Map.md#pymizu.Map)  
+A staged, submitted map -- the handle-first return of
+
 [PreparedMap](PreparedMap.md#pymizu.PreparedMap)  
 A map set up once in shared memory, run many times.
 
