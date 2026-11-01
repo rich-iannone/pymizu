@@ -26,7 +26,7 @@ pymizu is built on [libmizu](https://github.com/shikokuchuo/libmizu), a C librar
 - Reproducible parallel random numbers (`seed=`) — identical results for any worker count or steal order
 - Nested parallel maps — a task can map over its own pool, deadlock-free
 
-> **Pre-release.** The API is not yet stable and we may make changes in response to feedback.
+> **Lifecycle: experimental.** The API is not yet stable and we may make changes in response to feedback.
 
 ## Installation
 
