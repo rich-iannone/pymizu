@@ -25,6 +25,14 @@ seo:
   canonical:
     base_url: "https://shikokuchuo.net/pymizu/"
 
+# og:image / twitter card for shared links (1200x630 PNG). A full URL, not a
+# local path: great-docs copies a local image to the quarto project root but
+# nothing publishes it from there, so the root URL it builds would 404 —
+# assets/ is deployed, so point at the deployed path.
+social_cards:
+  image: https://shikokuchuo.net/pymizu/assets/og-image.png
+  twitter_card: summary_large_image
+
 dark_mode_toggle: true
 
 # Shrink wide tables to the content width; below 50% scale, scroll instead
