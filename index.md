@@ -1,10 +1,6 @@
-# pymizu ミズ
+# pymizu
 
-          ________
-         /\       \
-        /  \ pymizu\
-        \  / ミズ  /
-         \/_______/
+![pymizu logo](assets/logo.svg) ![pymizu logo](assets/logo-dark.svg)
 
 pymizu uses shared memory to make communication between Python processes fast enough to parallelize work at thread granularity.
 

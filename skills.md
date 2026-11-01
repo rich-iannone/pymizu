@@ -39,7 +39,7 @@ license: MIT
 compatibility: Requires Python >=3.10.
 ---
 
-# pymizu ミズ
+# pymizu
 
 Zero-copy async and parallel IPC across Python and R
 

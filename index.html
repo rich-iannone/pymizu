@@ -10,8 +10,8 @@
 
 <meta name="description" content="Zero-copy async and parallel IPC across Python and R">
 
-<title>pymizu ミズ</title>
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareSourceCode", "name": "pymizu ミズ", "description": "Zero-copy async and parallel IPC across Python and R", "codeRepository": "https://github.com/shikokuchuo/pymizu", "license": "https://opensource.org/licenses/MIT", "url": "https://shikokuchuo.net/pymizu", "documentation": "https://shikokuchuo.net/pymizu", "programmingLanguage": {"@type": "ComputerLanguage", "name": "Python"}}</script>
+<title>pymizu</title>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareSourceCode", "name": "pymizu", "description": "Zero-copy async and parallel IPC across Python and R", "codeRepository": "https://github.com/shikokuchuo/pymizu", "license": "https://opensource.org/licenses/MIT", "url": "https://shikokuchuo.net/pymizu", "documentation": "https://shikokuchuo.net/pymizu", "programmingLanguage": {"@type": "ComputerLanguage", "name": "Python"}}</script>
 <meta property="og:type" content="website">
 <style>
 /* Default styles provided by pandoc.
@@ -76,6 +76,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
+<link href="./favicon.svg" rel="icon" type="image/svg+xml">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
@@ -120,6 +121,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script defer="" src="./gd-lightbox-compare.js"></script>
 <link rel="stylesheet" href="./gd-lightbox-annotate.css">
 <script defer="" src="./gd-lightbox-annotate.js"></script>
+<link rel="icon" type="image/svg+xml" href="https://shikokuchuo.net/pymizu/favicon.svg">
 <meta name="gd-wide-layout" data-default="normal" data-min-viewport="1600">
 <style id="gd-wide-layout-vars">:root{--gd-wide-content-scale:1.5;--gd-wide-sidebar-scale:1.2;}</style>
 <script src="./theme-init.js"></script>
@@ -130,12 +132,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link rel="alternate" type="text/markdown" href="index.md">
 
 
-<meta property="og:title" content="pymizu ミズ | pymizu ミズ">
+<meta property="og:title" content="pymizu | pymizu">
 <meta property="og:description" content="Zero-copy async and parallel IPC across Python and R">
-<meta property="og:site_name" content="pymizu ミズ">
-<meta name="twitter:title" content="pymizu ミズ | pymizu ミズ">
+<meta property="og:image" content="https://shikokuchuo.net/pymizu/assets/logo.svg">
+<meta property="og:site_name" content="pymizu">
+<meta property="og:image:alt" content="pymizu logo">
+<meta name="twitter:title" content="pymizu | pymizu">
 <meta name="twitter:description" content="Zero-copy async and parallel IPC across Python and R">
-<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://shikokuchuo.net/pymizu/assets/logo.svg">
+<meta name="twitter:image:alt" content="pymizu logo">
+<meta name="twitter:card" content="summary_large_image">
 </head>
 
 <body class="nav-fixed gd-homepage quarto-light">
@@ -145,8 +151,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="./index.html">
-    <span class="navbar-title">pymizu ミズ</span>
+    <a href="./index.html" class="navbar-brand navbar-brand-logo">
+    <img src="./logo-icon.svg" alt="pymizu" class="navbar-logo light-content">
+    <img src="./logo-icon.svg" alt="pymizu" class="navbar-logo dark-content">
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
@@ -188,7 +195,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">pymizu ミズ</h1>
+<h1 class="title">pymizu</h1>
 </div>
 
 
@@ -249,11 +256,7 @@ section.level2:first-of-type > h2:first-child,
 <h3 class="anchored" data-anchor-id="meta">Meta</h3>
 <p><strong>Requires:</strong> Python <code>&gt;=3.10</code><br> <strong>Provides-Extra:</strong> <code>numpy</code>, <code>cloudpickle</code>, <code>dev</code>, <code>docs</code>, <code>all</code><br> <a href="package-info.html">Package Info</a></p>
 </section>
-</div></div><pre><code>      ________
-     /\       \
-    /  \ pymizu\
-    \  / ミズ  /
-     \/_______/</code></pre>
+</div></div><p><img src="assets/logo.svg" class="light-content" align="right" width="240" alt="pymizu logo"> <img src="assets/logo-dark.svg" class="dark-content" align="right" width="240" alt="pymizu logo"></p>
 <p>pymizu uses shared memory to make communication between Python processes fast enough to parallelize work at thread granularity.</p>
 <p>Task round trips drop from ~100 µs over sockets to &lt; 1 µs — two orders of magnitude (see <a href="#benchmarks">Benchmarks</a>). Common data structures like lists, dicts, numpy arrays, and Arrow tables can be shared between Python and R as zero-copy views.</p>
 <p>In the default CPython build, the GIL runs CPU-bound threads on one core at a time, so compute parallelism in Python usually means multiple processes. Processes also isolate failures: a worker that crashes does not take the host down with it.</p>
@@ -271,19 +274,19 @@ section.level2:first-of-type > h2:first-child,
 </blockquote>
 <section id="installation" class="level2">
 <h2 class="anchored" data-anchor-id="installation">Installation</h2>
-<div class="sourceCode" id="cb2"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install git+https://github.com/shikokuchuo/pymizu</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install git+https://github.com/shikokuchuo/pymizu</span></code></pre></div>
 <p>Requires Python 3.10 or later on a 64-bit platform. See <a href="./user-guide/installation.html">Installation</a> for platform notes, optional extras, and deployment on Linux.</p>
 </section>
 <section id="quickstart" class="level2">
 <h2 class="anchored" data-anchor-id="quickstart">Quickstart</h2>
-<div id="6e58ed23" class="cell" data-execution_count="1">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pymizu</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> pymizu.Pool.create(<span class="dv">4</span>) <span class="im">as</span> pool:</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    task <span class="op">=</span> pool.submit(<span class="bu">pow</span>, <span class="dv">2</span>, <span class="dv">16</span>)</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    result <span class="op">=</span> task.collect(timeout<span class="op">=</span><span class="dv">5</span>)</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>result</span></code></pre></div>
+<div id="cb595c8d" class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pymizu</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> pymizu.Pool.create(<span class="dv">4</span>) <span class="im">as</span> pool:</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    task <span class="op">=</span> pool.submit(<span class="bu">pow</span>, <span class="dv">2</span>, <span class="dv">16</span>)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    result <span class="op">=</span> task.collect(timeout<span class="op">=</span><span class="dv">5</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>result</span></code></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="1">
 <pre><code>65536</code></pre>
 </div>
@@ -372,12 +375,12 @@ section.level2:first-of-type > h2:first-child,
 <section id="drop-in-concurrent.futures" class="level2">
 <h2 class="anchored" data-anchor-id="drop-in-concurrent.futures">Drop-in <code>concurrent.futures</code></h2>
 <p><a href="./reference/PoolExecutor.html#pymizu.PoolExecutor" class="gdls-link gdls-code">PoolExecutor</a> adapts a pool to the stdlib <code>concurrent.futures.Executor</code> interface — code written against <code>ProcessPoolExecutor</code> drops in, and <code>submit</code> returns real <code>Future</code> objects:</p>
-<div id="dcdf2dee" class="cell" data-execution_count="2">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> pymizu.PoolExecutor.create(<span class="dv">4</span>) <span class="im">as</span> ex:</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    futures <span class="op">=</span> [ex.submit(<span class="bu">pow</span>, <span class="dv">2</span>, i) <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">4</span>)]</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    result <span class="op">=</span> [f.result() <span class="cf">for</span> f <span class="kw">in</span> futures]</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>result</span></code></pre></div>
+<div id="a7d0520f" class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> pymizu.PoolExecutor.create(<span class="dv">4</span>) <span class="im">as</span> ex:</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    futures <span class="op">=</span> [ex.submit(<span class="bu">pow</span>, <span class="dv">2</span>, i) <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">4</span>)]</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    result <span class="op">=</span> [f.result() <span class="cf">for</span> f <span class="kw">in</span> futures]</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>result</span></code></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="2">
 <pre><code>[1, 2, 4, 8]</code></pre>
 </div>
@@ -388,11 +391,11 @@ section.level2:first-of-type > h2:first-child,
 <h2 class="anchored" data-anchor-id="parallel-map">Parallel map</h2>
 <p><code>Pool.map(fn, x)</code> maps <code>fn</code> over <code>x</code> on the pool and returns a <a href="./reference/Map.html#pymizu.Map" class="gdls-link gdls-code">Map</a> handle immediately. The function and data cross into shared memory once. Workers divide the elements among themselves, claiming ranges from a shared cursor. <code>handle.collect()</code> returns the results in order — or <code>await handle</code> in asyncio code.</p>
 <p>A map also nests — the mapped function can map over its own pool with <a href="./reference/current_pool.html#pymizu.current_pool" class="gdls-link gdls-code">pymizu.current_pool()</a>, deadlock-free.</p>
-<div id="c93fdb7d" class="cell" data-execution_count="3">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> pymizu.Pool.create(<span class="dv">4</span>) <span class="im">as</span> pool:</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    result <span class="op">=</span> pool.<span class="bu">map</span>(<span class="bu">abs</span>, <span class="bu">range</span>(<span class="op">-</span><span class="dv">5</span>, <span class="dv">5</span>)).collect()</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>result</span></code></pre></div>
+<div id="43671300" class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> pymizu.Pool.create(<span class="dv">4</span>) <span class="im">as</span> pool:</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    result <span class="op">=</span> pool.<span class="bu">map</span>(<span class="bu">abs</span>, <span class="bu">range</span>(<span class="op">-</span><span class="dv">5</span>, <span class="dv">5</span>)).collect()</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>result</span></code></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="3">
 <pre><code>[5, 4, 3, 2, 1, 0, 1, 2, 3, 4]</code></pre>
 </div>
@@ -402,14 +405,14 @@ section.level2:first-of-type > h2:first-child,
 <section id="r-interop" class="level2">
 <h2 class="anchored" data-anchor-id="r-interop">R interop</h2>
 <p>Pool workers can be R processes that run the <a href="https://github.com/shikokuchuo/mizu">mizu</a> package, the R binding of the same core. <a href="./reference/r_launcher.html#pymizu.r_launcher" class="gdls-link gdls-code">pymizu.r_launcher()</a> spawns them and <a href="./reference/call.html#pymizu.call" class="gdls-link gdls-code">pymizu.call()</a> specifies the task. Here, R’s built-in <code>mtcars</code> is summarized in R and read back into polars:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> polars <span class="im">as</span> pl</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pymizu</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> pymizu.Pool.create(<span class="dv">4</span>, launcher<span class="op">=</span>pymizu.r_launcher()) <span class="im">as</span> pool:</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    task <span class="op">=</span> pool.submit(</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>        pymizu.call(source<span class="op">=</span><span class="st">"aggregate(mpg ~ cyl, data = mtcars, FUN = mean)"</span>)</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(pl.DataFrame(task.collect()))</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> polars <span class="im">as</span> pl</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pymizu</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> pymizu.Pool.create(<span class="dv">4</span>, launcher<span class="op">=</span>pymizu.r_launcher()) <span class="im">as</span> pool:</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    task <span class="op">=</span> pool.submit(</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>        pymizu.call(source<span class="op">=</span><span class="st">"aggregate(mpg ~ cyl, data = mtcars, FUN = mean)"</span>)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(pl.DataFrame(task.collect()))</span></code></pre></div>
 <ul>
 <li>A numpy array arrives in R as a numeric vector, and a polars, pyarrow, or pandas frame as a data frame</li>
 <li>A vector or data frame arrives back as a numpy array or a <a href="./reference/Frame.html#pymizu.Frame" class="gdls-link gdls-code">pymizu.Frame</a></li>
