@@ -448,7 +448,7 @@ int mizu_py_interop_register(PyObject *m, PyObject *mizu_error,
 
 /* The one TaskError builder: (type name, message, traceback, optional
    element index) -> the exception object, text "type: message", the
-   fields as remote_type / remote_traceback / index. Borrowed references;
+   fields as remote_type / detail / index. Borrowed references;
    NULL with an exception set on allocation failure. */
 PyObject *mizu_py_task_error_build(PyObject *tn, PyObject *ms,
                                    PyObject *tbs, PyObject *eidx);

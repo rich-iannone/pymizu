@@ -1326,8 +1326,11 @@ def test_map_stage_under_fd_starvation():
     try:
         if not armed:
             pytest.skip("fd starvation not effective on this platform")
-        with pytest.raises(pymizu.ShmError, match="cannot create map region"):
+        with pytest.raises(
+            pymizu.ShmError, match="cannot create map region"
+        ) as exc_info:
             pymizu._pymizu._map_stage(desc, None, 4, 1, None, False, 1)
+        assert exc_info.value.bytes > 0  # the uncreated region's size
     finally:
         resource.setrlimit(resource.RLIMIT_NOFILE, (soft, hard))
 
@@ -1385,8 +1388,11 @@ def test_map_foreign_capsule_tolerance():
 
 
 def test_map_open_unknown_region():
-    with pytest.raises(pymizu.ShmError, match="cannot open map region"):
+    with pytest.raises(
+        pymizu.ShmError, match="cannot open map region"
+    ) as exc_info:
         pymizu._pymizu._map_open("/mizu_no_such_region_0000")
+    assert exc_info.value.bytes is None  # an open failure carries no size
 
 
 def test_map_x_view_requires_an_x_section():

@@ -1179,10 +1179,8 @@ def test_peer_error_sends_an_err_stream_before_exit():
         assert v.remote_type == "ValueError"
         assert str(v) == "ValueError: boom"
         # the traceback truncates to its share of the inline budget
-        assert v.remote_traceback.startswith(
-            "Traceback (most recent call last):"
-        )
-        assert len(v.remote_traceback.encode()) <= 201
+        assert v.detail.startswith("Traceback (most recent call last):")
+        assert len(v.detail.encode()) <= 201
         assert ch.recv(timeout=10) is pymizu.CLOSED
     finally:
         ch.close()

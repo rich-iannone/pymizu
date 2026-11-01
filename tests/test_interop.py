@@ -1058,7 +1058,7 @@ def test_err_stream_reads_as_a_task_error_value():
     assert not pymizu.is_remote_error(ValueError("boom"))
     assert v.remote_type == "ValueError"
     assert str(v) == "ValueError: boom"
-    assert v.remote_traceback == ""
+    assert v.detail == ""
     assert not hasattr(v, "index")
     data_idx = bytes.fromhex(
         "490111010029000000000000000b000000576f726b65724572726f72"
@@ -1079,7 +1079,7 @@ def test_write_err_frames_bounded():
     v = _read(bytes(b))
     assert v.remote_type == "custom_error"
     assert str(v) == "custom_error: " + "m" * 11
-    assert v.remote_traceback == ""
+    assert v.detail == ""
     # a multibyte string cuts at a character boundary
     b2 = _pymizu._write_err("custom_error", "é" * 100, "", budget=60)
     assert len(b2) <= 60
@@ -1096,7 +1096,7 @@ def test_err_send_crosses_foreign_and_same_language_channels():
     assert isinstance(v, pymizu.TaskError)
     assert v.remote_type == "ValueError"
     assert str(v) == "ValueError: boom"
-    assert "ValueError: boom" in v.remote_traceback
+    assert "ValueError: boom" in v.detail
     p.destroy()
     h.destroy()
     # same-language: the pointer match bypasses pickle, the same value

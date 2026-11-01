@@ -1086,7 +1086,9 @@ class Pool:
         WorkerDiedError
             Worker death carries the lost element ranges as ``lost``
             (0-based half-open ``(lo, hi)`` pairs, possibly wider than
-            what was lost).
+            what was lost; mizu's ``mizu_error_worker_died$lost``
+            carries the same set as a two-column matrix of inclusive
+            1-based ranges).
         TypeError
             A [`call`](`pymizu.call`) spec as ``fn`` with
             ``stream=True``.
@@ -1495,7 +1497,7 @@ def is_remote_error(x: _Any) -> bool:
     exception. The value is a
     [`TaskError`](`pymizu.TaskError`) carrying the original exception's
     class name as ``remote_type`` and its traceback text as
-    ``remote_traceback``; raise it to propagate the error.
+    ``detail``; raise it to propagate the error.
 
     Returns
     -------

@@ -25,7 +25,8 @@ class MizuError(Exception):
 
 class DeclinedError(TypeError):
     """A value sent to a peer of another language, outside the portable
-    subset."""
+    subset. `reason` includes the one-line rewrite guidance for the
+    value."""
 
     path: str
     reason: str
@@ -50,7 +51,11 @@ class Frame:
     def __reduce__(self) -> Any: ...
 
 class ShmError(MizuError, OSError):
-    """Shared-memory setup/teardown failure (also an OSError)."""
+    """Shared-memory setup/teardown failure (also an OSError). `bytes`
+    is the requested size of a region that was not created, None when a
+    region was not opened."""
+
+    bytes: int | None
 
 class StartupError(MizuError):
     """A peer or worker failed to attach within the startup timeout."""
@@ -72,7 +77,7 @@ class TaskError(MizuError):
     """A task raised; carries the error's type and traceback."""
 
     remote_type: str
-    remote_traceback: str
+    detail: str
 
 class WorkerDiedError(MizuError):
     """The worker died while running the task."""

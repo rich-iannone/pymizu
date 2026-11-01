@@ -60,7 +60,7 @@ def test_spec_task_error_escapes_surrogates():
         with pytest.raises(pymizu.TaskError) as ei:
             t.collect(timeout=15)
     assert "bad path: /tmp/caf" in str(ei.value)
-    assert ei.value.remote_traceback
+    assert ei.value.detail
 
 
 def test_spec_task_base_exception_takes_the_worker_down():
@@ -90,7 +90,7 @@ def test_spec_tasks_run_same_language():
         with pytest.raises(pymizu.TaskError) as ei:
             p.submit(pymizu.call("builtins.len", 1.5)).collect()
         assert ei.value.remote_type == "TypeError"
-        assert ei.value.remote_traceback != ""
+        assert ei.value.detail != ""
         # extra args with a spec are rejected
         with pytest.raises(TypeError, match="carries its own arguments"):
             p.submit(pymizu.call("math.sqrt", 16), 1)
@@ -611,8 +611,11 @@ def test_spec_zc_checkout_failure_abandons_to_value():
         try:
             if not armed:
                 pytest.skip("fd starvation not effective on this platform")
-            with pytest.raises(pymizu.ShmError, match="payload region"):
+            with pytest.raises(
+                pymizu.ShmError, match="payload region"
+            ) as exc_info:
                 pool.submit(pymizu.call("numpy.size", big))
+            assert exc_info.value.bytes > 0
         finally:
             resource.setrlimit(resource.RLIMIT_NOFILE, (soft, hard))
         assert (

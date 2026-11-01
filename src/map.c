@@ -200,9 +200,24 @@ static PyObject *py_map_stage(PyObject *Py_UNUSED(module), PyObject *args) {
   if (mizu_shm_create(&shm, (size_t) size) != MIZU_OK) {
     const char *summary, *hint;
     mizu_err_describe(mizu_last_error_category(), &summary, &hint);
-    PyErr_Format(MizuShmErr, "pymizu: cannot create map region (%llu bytes): "
-                 "%s%s%s", (unsigned long long) size, summary,
-                 hint[0] != '\0' ? ". " : "", hint);
+    PyObject *text = PyUnicode_FromFormat(
+      "pymizu: cannot create map region (%llu bytes): %s%s%s",
+      (unsigned long long) size, summary, hint[0] != '\0' ? ". " : "",
+      hint);
+    PyObject *exc =
+      text != NULL ? PyObject_CallFunction(MizuShmErr, "N", text) : NULL;
+    if (exc != NULL) {
+      /* ShmError's 'bytes': the requested size of the uncreated region */
+      PyObject *bytes = PyLong_FromUnsignedLongLong(size);
+      if (bytes == NULL ||
+          PyObject_SetAttrString(exc, "bytes", bytes) < 0)
+        Py_CLEAR(exc);
+      Py_XDECREF(bytes);
+    }
+    if (exc != NULL) {
+      PyErr_SetObject(MizuShmErr, exc);
+      Py_DECREF(exc);
+    }
     goto fail_bufs;
   }
   unsigned char *b = (unsigned char *) shm->addr;

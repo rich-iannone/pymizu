@@ -692,7 +692,7 @@ def err_same(a, exp):
         isinstance(a, pymizu.TaskError)
         and a.remote_type == exp.remote_type
         and str(a) == f"{exp.remote_type}: {exp.message}"
-        and a.remote_traceback == exp.detail
+        and a.detail == exp.detail
         and getattr(a, "index", None) == exp.index
     )
 

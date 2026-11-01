@@ -291,8 +291,8 @@ def test_task_error_traceback(pool):
         t.collect(timeout=5)
     exc = exc_info.value
     assert exc.remote_type == "ValueError"
-    assert "Traceback (most recent call last)" in exc.remote_traceback
-    assert "raise_long" in exc.remote_traceback
+    assert "Traceback (most recent call last)" in exc.detail
+    assert "raise_long" in exc.detail
 
 
 def test_task_error_envelope_is_bounded(pool):
@@ -304,7 +304,7 @@ def test_task_error_envelope_is_bounded(pool):
     # the envelope truncates to the result slot's inline budget (240 bytes
     # at the default 256-byte slot size)
     assert len(str(exc)) < 1000
-    assert len(exc.remote_traceback) < 1000
+    assert len(exc.detail) < 1000
 
 
 def test_task_error_envelope_sheds_traceback_first(pool):
@@ -315,8 +315,8 @@ def test_task_error_envelope_sheds_traceback_first(pool):
         t.collect(timeout=10)
     exc = exc_info.value
     assert "boom" in str(exc)
-    assert exc.remote_traceback.startswith("Traceback (most recent call last)")
-    assert len(exc.remote_traceback) < 250
+    assert exc.detail.startswith("Traceback (most recent call last)")
+    assert len(exc.detail) < 250
 
 
 def test_task_error_envelope_drops_traceback_then_truncates(pool):
@@ -325,7 +325,7 @@ def test_task_error_envelope_drops_traceback_then_truncates(pool):
     with pytest.raises(pymizu.TaskError) as exc_info:
         t.collect(timeout=10)
     exc = exc_info.value
-    assert exc.remote_traceback == ""
+    assert exc.detail == ""
     assert str(exc) == "ValueError: " + "x" * (len(str(exc)) - 12)
     assert len(str(exc)) < 300
 
@@ -783,7 +783,7 @@ try:
             raise SystemExit("expected TaskError")
         except pymizu.TaskError as e:
             assert e.remote_type == "ValueError"
-            assert e.remote_traceback == "", repr(e.remote_traceback)
+            assert e.detail == "", repr(e.detail)
 """
 
 _ERR_POOL_EPILOG = """

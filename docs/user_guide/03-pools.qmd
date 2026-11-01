@@ -45,7 +45,7 @@ Construct the `Frame` first to opt in.
 
 | Outcome | On collect |
 |---|---|
-| The task raised | `pymizu.TaskError`, with `remote_type` and `remote_traceback` |
+| The task raised | `pymizu.TaskError`, with `remote_type` and `detail` |
 | The task was cancelled before it ran | `pymizu.CancelledError` |
 | The executing worker died | `pymizu.WorkerDiedError`, with `slot` and `pid` |
 | The task's payload region vanished without a death verdict | `pymizu.TaskLostError` |

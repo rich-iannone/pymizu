@@ -1963,7 +1963,7 @@ static PyObject *factor_to_list(const int32_t *codes, uint64_t n,
 static PyObject *ixr_attr(mizu_ix *cur, const ixr_mode *mode);
 
 /* The err tag's Python home: a TaskError *value* (remote_type,
-   remote_traceback, index when the flags carry one) — a received error is
+   detail, index when the flags carry one) — a received error is
    data until user code decides to raise (pymizu.is_remote_error). The
    cursor has validated the three bare strings as UTF-8; never NA. */
 static PyObject *ixr_err(const mizu_ix_item *it) {

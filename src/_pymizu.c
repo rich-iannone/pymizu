@@ -261,14 +261,55 @@ static PyObject *runner_frame_new(PyObject *name, PyObject *gen_field,
 
 // Errors -------------------------------------------------------------------------
 
+/* ShmError's 'bytes' field: the requested size of a region that was not
+   created, parsed from the core's composed "cannot create ... (N bytes)"
+   message; NULL (the class-level None stands) when absent — a region that
+   was not opened carries no size. New reference on a parse. */
+static PyObject *shm_bytes_parse(const char *msg) {
+  const char *p = strchr(msg, '(');
+  if (p == NULL) return NULL;
+  char *end;
+  unsigned long long v = strtoull(p + 1, &end, 10);
+  /* no overflow guard: the core composed the digits from its own
+     uint64_t size, and the "(N bytes)" shape is the validation — a
+     clamped parse on a corrupt message is a harmless 'bytes' */
+  if (end == p + 1 || strncmp(end, " bytes)", 7) != 0)
+    return NULL;
+  return PyLong_FromUnsignedLongLong(v);
+}
+
+/* Raise ShmError from a printf-style message, attaching the optional
+   'bytes' (borrowed; NULL leaves the class-level None). NULL always. */
+static PyObject *shm_raise(PyObject *bytes, const char *fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+  PyObject *text = PyUnicode_FromFormatV(fmt, ap);
+  va_end(ap);
+  if (text == NULL) return NULL;
+  PyObject *exc = PyObject_CallFunction(MizuShmError, "N", text);
+  if (exc != NULL && bytes != NULL &&
+      PyObject_SetAttrString(exc, "bytes", bytes) < 0)
+    Py_CLEAR(exc);
+  if (exc != NULL) {
+    PyErr_SetObject(MizuShmError, exc);
+    Py_DECREF(exc);
+  }
+  return NULL;
+}
+
 /* create/attach failure: the core composed the message (size + hint) in the
    thread-local slot. Space/existence failures carry the shm class. */
 static int raise_tls(void) {
   mizu_errcat cat = mizu_last_error_category();
   const char *msg = mizu_last_error_message();
-  PyObject *exc = (cat == MIZU_ERRCAT_NOSPACE || cat == MIZU_ERRCAT_NOMEMORY ||
-                   cat == MIZU_ERRCAT_EXISTS) ? MizuShmError : MizuError;
-  PyErr_Format(exc, "pymizu: %s", msg);
+  if (cat == MIZU_ERRCAT_NOSPACE || cat == MIZU_ERRCAT_NOMEMORY ||
+      cat == MIZU_ERRCAT_EXISTS) {
+    PyObject *bytes = shm_bytes_parse(msg);
+    shm_raise(bytes, "pymizu: %s", msg);
+    Py_XDECREF(bytes);
+    return -1;
+  }
+  PyErr_Format(MizuError, "pymizu: %s", msg);
   return -1;
 }
 
@@ -299,8 +340,10 @@ uint8_t *mizu_py_stage_reserve(size_t n, mizu_slot_hdr *hdr,
   mizu_stage_reap(h);
   mizu_shm *shm;
   if (mizu_stage_spill_get(h, n, &shm) != MIZU_OK) {
-    PyErr_Format(MizuShmError, "pymizu: cannot create payload region "
-                 "(%zu bytes): %s", n, mizu_last_error_message());
+    PyObject *bytes = PyLong_FromSize_t(n);
+    shm_raise(bytes, "pymizu: cannot create payload region "
+              "(%zu bytes): %s", n, mizu_last_error_message());
+    Py_XDECREF(bytes);
     return NULL;
   }
   hdr->kind = MIZU_KIND_SHM_RAW;
@@ -4401,7 +4444,7 @@ static PyObject *read_frame(const mizu_slot_hdr *hdr, const uint8_t *payload,
 
 /* Build a TaskError from the (type name, message, traceback) fields and
    the optional element index: the exception's text is "type: message";
-   the fields ride as remote_type / remote_traceback / index. Borrowed
+   the fields ride as remote_type / detail / index. Borrowed
    references throughout. Serves the ERR envelope (below), the err tag's
    Python home (interop.c's reader, through mizu_py_task_error_build),
    and Phase 4's dual-format publish. */
@@ -4413,7 +4456,7 @@ static PyObject *task_error_build(PyObject *tn, PyObject *ms, PyObject *tbs,
     exc = PyObject_CallFunction(MizuTaskError, "N", text);
   if (exc != NULL &&
       (PyObject_SetAttrString(exc, "remote_type", tn) < 0 ||
-       PyObject_SetAttrString(exc, "remote_traceback", tbs) < 0 ||
+       PyObject_SetAttrString(exc, "detail", tbs) < 0 ||
        (eidx != NULL && PyObject_SetAttrString(exc, "index", eidx) < 0)))
     Py_CLEAR(exc);
   return exc;
@@ -5501,9 +5544,12 @@ static PyObject *raise_errcat(mizu_errcat cat, const char *msg) {
     break;
   case MIZU_ERRCAT_NOSPACE:
   case MIZU_ERRCAT_NOMEMORY:
-  case MIZU_ERRCAT_EXISTS:
-    PyErr_Format(MizuShmError, "pymizu: %s", msg);
+  case MIZU_ERRCAT_EXISTS: {
+    PyObject *bytes = shm_bytes_parse(msg);
+    shm_raise(bytes, "pymizu: %s", msg);
+    Py_XDECREF(bytes);
     break;
+  }
   default:
     PyErr_Format(MizuError, "pymizu: %s", msg);
     break;
@@ -8148,7 +8194,7 @@ PyDoc_STRVAR(task_collect_doc,
 "collect(timeout=None) -> value | sentinel\n\n\
 Wait up to `timeout` seconds (None indefinitely, 0 polls once) for the\n\
 task to finish and return its result. A task error re-raises as\n\
-pymizu.TaskError (carrying remote_type / remote_traceback), a cancellation\n\
+pymizu.TaskError (carrying remote_type / detail), a cancellation\n\
 as pymizu.CancelledError, a dead worker as pymizu.WorkerDiedError, a lost\n\
 result as pymizu.TaskLostError.\n\
 pymizu.TIMEOUT on expiry; a task is collected exactly once.");
@@ -9213,7 +9259,10 @@ PyInit__pymizu(void)
       add_exception(m, &MizuShmError, "pymizu.ShmError", MizuError,
                     PyExc_OSError,
                     "A shared-memory region operation failed. Also an "
-                    "OSError: the failure is at the OS layer.") < 0 ||
+                    "OSError: the failure is at the OS layer. Carries a "
+                    "'bytes' attribute: the requested size of a region "
+                    "that was not created, None when a region was not "
+                    "opened.") < 0 ||
       add_exception(m, &MizuSubmitTimeoutError, "pymizu.SubmitTimeoutError",
                     MizuError, PyExc_TimeoutError,
                     "Pool.submit() timed out waiting for injection-ring "
@@ -9241,13 +9290,14 @@ PyInit__pymizu(void)
       add_exception(m, &MizuTaskError, "pymizu.TaskError", MizuError,
                     NULL,
                     "The task callable raised. Carries 'remote_type' and "
-                    "'remote_traceback' attributes describing the "
+                    "'detail' attributes describing the "
                     "worker-side exception.") < 0 ||
       add_exception(m, &MizuDeclinedError, "pymizu.DeclinedError",
                     PyExc_TypeError, NULL,
                     "A send on a foreign-language channel of a value "
                     "outside the portable interchange subset. Carries "
-                    "'path' and 'reason' attributes.") < 0 ||
+                    "'path' and 'reason' attributes ('reason' includes "
+                    "the one-line rewrite guidance for the value).") < 0 ||
       add_exception(m, &MizuForeignPayloadError, "pymizu.ForeignPayloadError",
                     MizuError, NULL,
                     "A received payload in a language-private or "
@@ -9260,6 +9310,13 @@ PyInit__pymizu(void)
                     "A verb ran concurrently with another verb in the "
                     "same handle role: each handle role is confined to "
                     "one thread at a time (libmizu 'Handle threading').") < 0) {
+    Py_DECREF(m);
+    return NULL;
+  }
+
+  /* the open-failure default: 'bytes' reads None unless a create site set
+     the requested size on the instance (mizu's NA, mirrored) */
+  if (PyObject_SetAttrString(MizuShmError, "bytes", Py_None) < 0) {
     Py_DECREF(m);
     return NULL;
   }
