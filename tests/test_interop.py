@@ -1639,10 +1639,9 @@ def test_map_desc_hooks():
 
 
 MAP_DESC_PEER = """
-import time
 import numpy as np
 ch.send(np.arange(200000, dtype=np.float64))
-time.sleep(30)
+ch.recv()  # stay alive until the test's kill lands
 """
 
 
@@ -1664,7 +1663,7 @@ def test_map_desc_view_ref_resolve_and_gone():
     assert np.asarray(x)[3] == 3.0
     ch._proc.kill()
     assert ch.close() is True
-    ch._proc.wait()
+    ch._proc.wait(timeout=10)
     pymizu.prune()
     with pytest.raises(pymizu.MizuError, match="not found"):
         _pymizu._map_desc_read(b)

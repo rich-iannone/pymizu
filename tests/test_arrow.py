@@ -869,10 +869,9 @@ def test_export_complex_rejected(echo):
 
 
 VIEW_PEER = """
-import time
 import numpy as np
 ch.send(np.arange(200000, dtype=np.float64))
-time.sleep(30)
+ch.recv()  # stay alive until the test's kill lands
 """
 
 
@@ -888,7 +887,7 @@ def test_view_export_after_producer_death():
     view = _exporter(ch.recv(30))
     ch._proc.kill()
     assert ch.close() is True
-    ch._proc.wait()
+    ch._proc.wait(timeout=10)
     pymizu.prune()  # a killed producer runs no teardown: the reaper
     # unlinks its orphaned regions
     assert view.to_numpy()[3] == 3.0

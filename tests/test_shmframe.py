@@ -1074,6 +1074,7 @@ def test_provenance_registry_cap_copies():
         [sys.executable, "-c", textwrap.dedent(REGISTRY_CAP_SCRIPT)],
         capture_output=True,
         text=True,
+        timeout=60,
     )
     assert res.returncode == 0, res.stderr
 

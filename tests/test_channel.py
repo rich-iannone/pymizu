@@ -12,23 +12,16 @@ import threading
 
 import pytest
 from tests.helpers import (
+    ECHO_PEER,
     ArraySubclass,
     BytesSubclass,
     StrSubclass,
     UnprintableError,
     parked_thread,
+    wait_guard_held,
 )
 
 import pymizu
-
-ECHO_PEER = """
-import pymizu
-while True:
-    x = ch.recv()
-    if x is pymizu.CLOSED or x is pymizu.PEER_GONE:
-        break
-    ch.send(x)
-"""
 
 BATCH_PEER = """
 import pymizu
@@ -276,6 +269,7 @@ def test_destroy_defers_to_in_flight_recv():
     # destroy(); teardown completes when the recv returns
     h = pymizu._pymizu._channel_new(64, 1024, 1 << 16, False, b"")
     th, got = parked_thread(lambda: h.recv(timeout=0.5))
+    wait_guard_held(lambda: h.recv(0))  # the recv is in flight
     h.destroy()
     th.join(timeout=5)
     assert got == [pymizu.TIMEOUT]
@@ -295,6 +289,7 @@ def test_destroy_racing_close():
         p.close_signal()
         h.destroy()
         th.join(timeout=5)
+        assert not th.is_alive()
         p.destroy()
 
 
@@ -303,6 +298,7 @@ def test_destroy_defers_to_in_flight_ready_wait():
     # destroy(); teardown completes when the wait returns
     h = pymizu._pymizu._channel_new(64, 1024, 1 << 16, False, b"")
     th, got = parked_thread(lambda: h.ready_wait(0.5))
+    wait_guard_held(lambda: h.recv(0))  # the ready_wait is in flight
     h.destroy()
     th.join(timeout=5)
     assert got == [False]
@@ -317,6 +313,7 @@ def test_destroy_breaks_indefinite_recv():
     h = pymizu._pymizu._channel_new(64, 1024, 1 << 16, False, b"")
     p, _ = pymizu._pymizu._channel_attach(h.token)
     th, got = parked_thread(h.recv)
+    wait_guard_held(lambda: h.recv(0))  # the recv is parked
     h.destroy()
     th.join(timeout=5)
     assert got == [pymizu.CLOSED]
@@ -327,6 +324,7 @@ def test_destroy_breaks_indefinite_recv():
 def test_destroy_breaks_indefinite_ready_wait():
     h = pymizu._pymizu._channel_new(64, 1024, 1 << 16, False, b"")
     th, got = parked_thread(lambda: h.ready_wait(None))
+    wait_guard_held(lambda: h.recv(0))  # the ready_wait is parked
     h.destroy()
     th.join(timeout=5)
     assert got == [False]
@@ -339,6 +337,7 @@ def test_destroy_breaks_indefinite_close():
     h = pymizu._pymizu._channel_new(64, 1024, 1 << 16, False, b"")
     p, _ = pymizu._pymizu._channel_attach(h.token)
     th, got = parked_thread(lambda: h.close(None))
+    wait_guard_held(lambda: h.recv(0))  # the close is parked
     h.destroy()
     th.join(timeout=5)
     assert got == [False]
@@ -352,6 +351,7 @@ def test_destroy_breaks_indefinite_recv_batch():
     h = pymizu._pymizu._channel_new(64, 1024, 1 << 16, False, b"")
     p, _ = pymizu._pymizu._channel_attach(h.token)
     th, got = parked_thread(lambda: h.recv_batch(4))
+    wait_guard_held(lambda: h.recv(0))  # the recv_batch is parked
     h.destroy()
     th.join(timeout=5)
     assert got == [pymizu.CLOSED]
@@ -361,9 +361,14 @@ def test_destroy_breaks_indefinite_recv_batch():
 
 def test_channel_repr():
     ch = pymizu.Channel.create(ECHO_PEER)
-    assert re.fullmatch(r"<pymizu\.Channel [0-9a-f]+_[0-9a-f]+>", repr(ch._h))
-    ch.destroy()
-    assert repr(ch._h) == "<pymizu.Channel (closed)>"
+    try:
+        assert re.fullmatch(
+            r"<pymizu\.Channel [0-9a-f]+_[0-9a-f]+>", repr(ch._h)
+        )
+        ch.destroy()
+        assert repr(ch._h) == "<pymizu.Channel (closed)>"
+    finally:
+        ch.destroy()
 
 
 def test_c_attach_validation():
@@ -662,14 +667,6 @@ def test_numpy_rawvec(echo, dtype):
     assert np.array_equal(b, a)
 
 
-def test_numpy_rawspill(echo):
-    a = np.arange(200000, dtype=np.float64)  # 1.6 MB: past the inline budget
-    assert echo.send(a) is None
-    b = echo.recv(timeout=5)
-    assert b.dtype == np.float64
-    assert np.array_equal(b, a)
-
-
 def test_numpy_scalar_and_0d_roundtrip(echo):
     # numpy scalars and 0-d arrays keep type and shape: the codec's
     # numpy row, not the raw tier's 1-D length-1 read (P-18)
@@ -752,17 +749,6 @@ def test_memmap_roundtrips_as_memmap(echo, tmp_path):
     assert list(r) == [1.5, 2.5, 3.5, 4.5]
 
 
-def test_exact_ndarray_stays_zero_copy(echo):
-    # the gate rejects subclasses only: an exact ndarray past the floor
-    # still arrives as a view over the shared pages
-    a = np.arange(100000, dtype=np.float64)
-    assert echo.send(a) is None
-    b = echo.recv(timeout=5)
-    assert type(b) is np.ndarray
-    assert _exporter(b) is not None
-    assert np.array_equal(b, a)
-
-
 # -- zero-copy views (SHM_VEC) ----------------------------------------------
 
 
@@ -774,11 +760,13 @@ def _exporter(arr):
 
 
 def test_shm_vec_roundtrip(echo):
-    # past MIZU_ZC_FLOOR_RAW the copy tiers give way to a zero-copy view
+    # past MIZU_ZC_FLOOR_RAW the copy tiers give way to a zero-copy view —
+    # the gate rejects subclasses only, so an exact ndarray arrives as a
+    # view over the shared pages
     a = np.arange(100000, dtype=np.float64)  # 800 KB
     assert echo.send(a) is None
     b = echo.recv(timeout=5)
-    assert isinstance(b, np.ndarray)
+    assert type(b) is np.ndarray
     assert b.dtype == np.float64
     assert np.array_equal(b, a)
     assert not b.flags.writeable

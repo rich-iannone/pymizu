@@ -305,6 +305,16 @@ def sleep_ident(t):
     return t
 
 
+ECHO_PEER = """
+import pymizu
+while True:
+    x = ch.recv()
+    if x is pymizu.CLOSED or x is pymizu.PEER_GONE:
+        break
+    ch.send(x)
+"""
+
+
 def parked_thread(fn):
     """Spawn a daemon thread calling ``fn()`` and return once the thread
     is at the verb's door — the deterministic stand-in for ``start()``
@@ -325,6 +335,25 @@ def parked_thread(fn):
     th.start()
     assert at_door.wait(5)
     return th, results
+
+
+def wait_guard_held(poll, timeout=5.0):
+    """Poll ``poll()`` until it raises pymizu.ConcurrentUseError: proof a
+    verb on another thread has entered and holds the side's guard — the
+    deterministic follow-up to ``parked_thread()`` where a sleep would
+    only guess that the verb had started. ``poll`` must be a guarded
+    verb with no side effects while the guard is free (a zero-timeout
+    poll such as ``h.recv(0)``)."""
+    deadline = time.monotonic() + timeout
+    while True:
+        try:
+            poll()
+        except pymizu.ConcurrentUseError:
+            return
+        assert time.monotonic() < deadline, (
+            "the parked verb never took the guard"
+        )
+        time.sleep(0.001)
 
 
 def takes_timeout(*, timeout=None):
@@ -546,6 +575,17 @@ def frame_and_buffer(f, a):
     """A Frame and a buffer argument's arrival forms, with the buffer's
     sum (the one-checkout budget: both copy on the pickle fallback)."""
     return frames_report(f)[0], not a.flags.writeable, float(a.sum())
+
+
+def chan_pair():
+    """An in-process channel pair (host, peer) as facade Channels."""
+    from pymizu import _pymizu
+
+    h = _pymizu._channel_new(64, 256, 1 << 16, False, b"")
+    p, _ = _pymizu._channel_attach(h.token)
+    p.ready_set()
+    assert h.ready_wait(5)
+    return pymizu.Channel._wrap(h), pymizu.Channel._wrap(p)
 
 
 def foreign_pair(caps=0):

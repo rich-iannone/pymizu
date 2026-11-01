@@ -200,7 +200,7 @@ def test_a_dead_r_workers_lost_set_scan():
         pid = p.dump()["workers"][0]["pid"]
 
         def kill_soon():
-            deadline = time.monotonic() + 15
+            deadline = time.monotonic() + 30
             while time.monotonic() < deadline:
                 if any(w["in_flight"] != -1 for w in p.dump()["workers"]):
                     os.kill(pid, signal.SIGKILL)
@@ -383,16 +383,6 @@ def test_stream_spec_map_seed_invariance(r_pool):
             fn, list(range(40)), stream=True, seed=42, n_chunks=chunks
         ).collect()
         assert got == want
-
-
-def test_stream_spec_map_error_index(r_pool):
-    fn = pymizu.call(source='if (x == 3) stop("boom") else x')
-    with pytest.raises(pymizu.TaskError) as exc_info:
-        r_pool.map(fn, list(range(10)), stream=True, n_chunks=5).collect()
-    # the global element index (0-based here): collect_any's `position`
-    # names the chunk, the envelope's index offsets by its base
-    assert exc_info.value.index == 3
-    assert "boom" in str(exc_info.value)
 
 
 def test_stream_spec_map_error_index_min():

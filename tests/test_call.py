@@ -131,6 +131,7 @@ def test_pool_word_zero_and_attach_race():
         assert t.collect(timeout=10) == 1
         assert pool._h._worker_ident() == (3, 511)  # this build's caps word
         assert att._h._worker_ident() == (3, 511)
+        att.destroy()
     finally:
         h.destroy()
 
@@ -190,6 +191,7 @@ def test_qualifier_defers_on_unknown_language():
             pool.submit(pymizu.call("sqrt", 4.0)).collect(timeout=10)
         pool.stop()
         loop.join(timeout=10)
+        assert not loop.is_alive()
         wk.destroy()
     finally:
         h.destroy()

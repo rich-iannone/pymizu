@@ -22,6 +22,7 @@ def _run_without_numpy(tmp_path, script):
         cwd=pathlib.Path(__file__).parent.parent,
         capture_output=True,
         text=True,
+        timeout=120,
     )
     assert res.returncode == 0, res.stderr
 
@@ -37,6 +38,7 @@ def _run_with_numpy_stub(tmp_path, stub, script):
         cwd=pathlib.Path(__file__).parent.parent,
         capture_output=True,
         text=True,
+        timeout=120,
     )
     assert res.returncode == 0, res.stderr
 

@@ -2,6 +2,7 @@
 calling thread, removal with None, and unraisable hook errors."""
 
 import gc
+import re
 import weakref
 
 import pytest
@@ -28,6 +29,7 @@ def test_trace_submit_events(pool):
     assert len(events) == 2
     assert all(ev == "submit" for ev, _ in events)
     assert len({tid for _, tid in events}) == 2
+    assert all(re.fullmatch(r"\d+:\d+", tid) for _, tid in events)
 
     pool.trace(None)
     t3 = pool.submit(pow, 1, 1)

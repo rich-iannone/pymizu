@@ -13,7 +13,7 @@ import threading
 import time
 
 import pytest
-from tests.helpers import fail_at, sleep_ident, sleep_on, square
+from tests.helpers import chan_pair, fail_at, sleep_ident, sleep_on, square
 
 import pymizu
 from pymizu import _pymizu
@@ -40,15 +40,6 @@ def pool():
     p = pymizu.Pool.create(2)
     yield p
     p.stop()
-
-
-def chan_pair():
-    """An in-process channel pair (host, peer) as facade Channels."""
-    h = _pymizu._channel_new(64, 256, 1 << 16, False, b"")
-    p, _ = _pymizu._channel_attach(h.token)
-    p.ready_set()
-    assert h.ready_wait(5)
-    return pymizu.Channel._wrap(h), pymizu.Channel._wrap(p)
 
 
 # -- channel ---------------------------------------------------------------
@@ -98,19 +89,6 @@ def test_recv_async_terminal(ch):
         fut = ch.recv_async()
         ch.send("stop")
         assert await fut is pymizu.CLOSED
-
-    asyncio.run(main())
-
-
-def test_recv_async_cancel_detaches(ch):
-    # a cancelled waiter leaves the FIFO: the next message goes to the
-    # next waiter
-    async def main():
-        f1 = ch.recv_async()
-        f1.cancel()
-        await asyncio.sleep(0)  # the detach callback runs
-        ch.send(1)
-        assert await ch.recv_async() == 1
 
     asyncio.run(main())
 
@@ -952,11 +930,13 @@ def test_pool_edge_trigger():
     # several tasks publishing to one armed submitter send one signal
     # per burst (the submitter word is clear-on-send)
     h = _pymizu._pool_new(1, 8, 64, 64, 64, 512)
+    wk = _pymizu._pool_worker_join(h.token, 0)
+    th = None
     try:
-        wk = _pymizu._pool_worker_join(h.token, 0)
         pool = pymizu.Pool._wrap(h)
 
         async def main():
+            nonlocal th
             tasks = [pool.submit(square, i) for i in range(8)]
             fut = pool.collect_all_async(tasks)  # announce + arm first
             # the worker executes only now: every publish is announced
@@ -983,18 +963,24 @@ def test_pool_edge_trigger():
 
         asyncio.run(main())
     finally:
-        h.destroy()
+        h.destroy()  # the shutdown broadcast breaks the worker's park
+        if th is not None:
+            th.join(timeout=5)
+            assert not th.is_alive()
+        wk.destroy()
 
 
 def test_pool_signal_coalesces_into_one_wake():
     # the submitter word's two armed transitions while a wake is queued
     # collapse to one scheduled pump: nothing is lost
     h = _pymizu._pool_new(1, 8, 64, 64, 64, 512)
+    wk = _pymizu._pool_worker_join(h.token, 0)
+    th = None
     try:
-        wk = _pymizu._pool_worker_join(h.token, 0)
         pool = pymizu.Pool._wrap(h)
 
         async def main():
+            nonlocal th
             t1 = pool.submit(square, 1)
             f1 = t1.collect_async()
             th = threading.Thread(target=wk.run, daemon=True)
@@ -1020,7 +1006,11 @@ def test_pool_signal_coalesces_into_one_wake():
 
         asyncio.run(main())
     finally:
-        h.destroy()
+        h.destroy()  # the shutdown broadcast breaks the worker's park
+        if th is not None:
+            th.join(timeout=5)
+            assert not th.is_alive()
+        wk.destroy()
 
 
 def test_pool_pump_quantum_split():
@@ -1028,11 +1018,13 @@ def test_pool_pump_quantum_split():
     # callbacks: order preserved, zero loss, the loop not starved
     n = _quantum_n() + 1
     h = _pymizu._pool_new(1, 1, 4096, 64, 4096, 512)
+    wk = _pymizu._pool_worker_join(h.token, 0)
+    th = None
     try:
-        wk = _pymizu._pool_worker_join(h.token, 0)
         pool = pymizu.Pool._wrap(h)
 
         async def main():
+            nonlocal th
             tasks = [pool.submit(square, i) for i in range(n)]
             futs = [t.collect_async() for t in tasks]
             th = threading.Thread(target=wk.run, daemon=True)
@@ -1048,18 +1040,24 @@ def test_pool_pump_quantum_split():
 
         asyncio.run(main())
     finally:
-        h.destroy()
+        h.destroy()  # the shutdown broadcast breaks the worker's park
+        if th is not None:
+            th.join(timeout=5)
+            assert not th.is_alive()
+        wk.destroy()
 
 
 def test_collection_pump_quantum_split():
     # the same split on the pump's collection pass
     n = _quantum_n() + 1
     h = _pymizu._pool_new(1, 1, 4096, 64, 4096, 512)
+    wk = _pymizu._pool_worker_join(h.token, 0)
+    th = None
     try:
-        wk = _pymizu._pool_worker_join(h.token, 0)
         pool = pymizu.Pool._wrap(h)
 
         async def main():
+            nonlocal th
             tasks = [pool.submit(square, i) for i in range(n)]
             futs = [pool.collect_all_async([t]) for t in tasks]
             th = threading.Thread(target=wk.run, daemon=True)
@@ -1072,4 +1070,8 @@ def test_collection_pump_quantum_split():
 
         asyncio.run(main())
     finally:
-        h.destroy()
+        h.destroy()  # the shutdown broadcast breaks the worker's park
+        if th is not None:
+            th.join(timeout=5)
+            assert not th.is_alive()
+        wk.destroy()

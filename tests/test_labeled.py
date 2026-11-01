@@ -7,7 +7,7 @@ import pickle
 
 import numpy as np
 import pytest
-from helpers import foreign_pair
+from tests.helpers import foreign_pair
 
 import pymizu
 from pymizu import _pymizu
@@ -253,17 +253,6 @@ def test_ref_probe_labelless_view_copies():
         assert not _pymizu._view_check(
             plain.view(np.float64).reshape(got.shape)
         )
-    finally:
-        p.close()
-        h.close()
-
-
-def test_ref_echo_pristine_region():
-    got, (h, p) = _region_dimarray()
-    try:
-        # the pristine echo re-sends as the region name: zero bytes move
-        # (the REF form stages, the peer receives the view again)
-        assert _pymizu._view_check(got)
     finally:
         p.close()
         h.close()

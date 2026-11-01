@@ -460,6 +460,7 @@ def test_np_type_probe_reprobes_after_numpy_import(tmp_path):
         cwd=pathlib.Path(__file__).parent.parent,
         capture_output=True,
         text=True,
+        timeout=60,
     )
     assert res.returncode == 0, res.stderr
 

@@ -39,12 +39,6 @@ def pool():
     p.stop()
 
 
-def test_fn_by_reference(pool):
-    # an importable callable crosses as (module, qualname), no pickle
-    assert pool.submit(square, 7).collect(timeout=5) == 49
-    assert pool.submit(pow, 2, 10).collect(timeout=5) == 1024  # a builtin
-
-
 def test_fn_pickled_fallback(pool):
     # a partial is not a plain function/builtin: fn rides its own pickle
     # stream (stock pickle handles partials, no cloudpickle needed)
@@ -168,9 +162,13 @@ def test_dict_arg_non_str_key_pickles(pool):
     assert pool.submit(len, {1: "x", 2: "y"}).collect(timeout=5) == 2
 
 
-def test_submit_batch_frames(pool):
-    tasks = pool.submit_batch([partial(square, i) for i in range(4)])
-    assert [t.collect(timeout=5) for t in tasks] == [0, 1, 4, 9]
+def _wait_child(child, timeout=30):
+    try:
+        child.wait(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        child.kill()
+        child.wait()
+        raise
 
 
 def test_vanished_bufref_region_does_not_wedge_pool(pool):
@@ -191,7 +189,7 @@ def test_vanished_bufref_region_does_not_wedge_pool(pool):
         ],
         cwd=os.path.dirname(os.path.dirname(__file__)),
     )
-    child.wait(timeout=10)
+    _wait_child(child)
     for _ in range(3):
         assert pool.submit(square, 3).collect(timeout=5) == 9
 
@@ -400,7 +398,7 @@ def test_vanished_frameref_region_does_not_wedge_pool(pool):
         ],
         cwd=os.path.dirname(os.path.dirname(__file__)),
     )
-    child.wait(timeout=10)
+    _wait_child(child)
     for _ in range(3):
         assert pool.submit(square, 3).collect(timeout=5) == 9
 

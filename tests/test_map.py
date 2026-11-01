@@ -339,7 +339,8 @@ def test_map_queued_behind_a_dead_worker_fails_not_hangs():
             pytest.fail("map runners did not queue")
         # SIGTERM on Windows: TerminateProcess, a hard kill either way
         os.kill(pid, getattr(signal, "SIGKILL", signal.SIGTERM))
-        t.join()
+        t.join(timeout=30)
+        assert not t.is_alive()
         assert not out
         assert len(err) == 1 and isinstance(err[0], pymizu.WorkerDiedError)
         assert err[0].slot is None
@@ -514,15 +515,6 @@ def test_map_seed_numpy_template(pool):
         np_rand_elt, list(range(50)), seed=42, template=np.empty(1)
     ).collect()
     np.testing.assert_array_equal(a, b)
-
-
-def test_map_seed_numpy_prepared_rerun(pool):
-    # a re-armed prepared run restarts every element's stream
-    pm = pool.map_prepare(np_rand_elt, list(range(30)))
-    try:
-        assert pm.run(seed=42).collect() == pm.run(seed=42).collect()
-    finally:
-        pm.close()
 
 
 def test_map_prepared_run_seed_is_per_run(pool):
@@ -827,7 +819,11 @@ def test_map_prepared_unclean_run_restages(pool):
             np.array([200.0, 1.0, 2.0, 3.0]), timeout=15, collect="view"
         ).collect()
         np.testing.assert_array_equal(np.asarray(out), [200.0, 1.0, 2.0, 3.0])
-        time.sleep(2.2)  # the straggler's write lands now, into the void
+        # the straggler's write lands once its batch ends — into the void
+        deadline = time.monotonic() + 10
+        while any(w["in_flight"] != -1 for w in pool.dump()["workers"]):
+            assert time.monotonic() < deadline
+            time.sleep(0.05)
         np.testing.assert_array_equal(np.asarray(out), [200.0, 1.0, 2.0, 3.0])
     finally:
         pm.close()

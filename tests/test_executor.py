@@ -111,11 +111,15 @@ def test_cancelled_claim_race_recovers():
         ex = pymizu.PoolExecutor(p)
         f0 = ex.submit(sleep_ident, 0.6)  # both workers busy ...
         fb = ex.submit(sleep_ident, 0.6)
-        time.sleep(0.1)
+        deadline = time.monotonic() + 10
+        while not all(w["in_flight"] != -1 for w in p.dump()["workers"]):
+            assert time.monotonic() < deadline
+            time.sleep(0.01)
         f1 = ex.submit(square, 1)  # ... so f1 is still queued here
         assert f1.cancel()  # the claim skip frees it CANCEL->FREE
         deadline = time.monotonic() + 5
-        while f1._task.state != "collected" and time.monotonic() < deadline:
+        while f1._task.state != "collected":
+            assert time.monotonic() < deadline
             time.sleep(0.01)
         f2 = ex.submit(square, 2)
         assert f0.result(timeout=5) == 0.6
@@ -134,16 +138,18 @@ def test_stale_handle_recovers(pool):
     # collect wins the wake for its own slot, so another task's publish
     # prods the scan that picks the stale handle up.
     ex = pymizu.PoolExecutor(pool)
-    f0 = ex.submit(sleep_ident, 0.3)
-    f1 = ex.submit(sleep_ident, 0.6)
-    # collected outside the drain (the outside collect claims its wake)
-    assert f1._task.collect(timeout=5) == 0.6
-    f2 = ex.submit(square, 2)
-    assert f0.result(timeout=5) == 0.3
-    assert f2.result(timeout=5) == 4
-    with pytest.raises(pymizu.MizuError, match="already collected"):
-        f1.result(timeout=5)
-    ex.shutdown()
+    try:
+        f0 = ex.submit(sleep_ident, 0.3)
+        f1 = ex.submit(sleep_ident, 0.6)
+        # collected outside the drain (the outside collect claims its wake)
+        assert f1._task.collect(timeout=5) == 0.6
+        f2 = ex.submit(square, 2)
+        assert f0.result(timeout=5) == 0.3
+        assert f2.result(timeout=5) == 4
+        with pytest.raises(pymizu.MizuError, match="already collected"):
+            f1.result(timeout=5)
+    finally:
+        ex.shutdown()
 
 
 def test_broken_executor_fails_and_blocks_submit(pool, monkeypatch):
@@ -168,16 +174,18 @@ def test_broken_executor_fails_and_blocks_submit(pool, monkeypatch):
 
 
 def test_destroy_racing_drain_fails_cleanly():
-    # destroy mid-flight: the drain's next scan raises the closed-handle
-    # error and every outstanding future fails with it
+    # destroy mid-flight: the outstanding future fails with the
+    # closed-handle error (the destroy hook, never a lost wake)
     p = pymizu.Pool.create(1)
-    ex = pymizu.PoolExecutor(p)
-    fut = ex.submit(sleep_ident, 0.5)
-    time.sleep(0.1)
-    p.destroy()
-    with pytest.raises(ValueError, match="closed"):
-        fut.result(timeout=5)
-    ex.shutdown(wait=False)
+    try:
+        ex = pymizu.PoolExecutor(p)
+        fut = ex.submit(sleep_ident, 0.5)
+        p.destroy()
+        with pytest.raises(ValueError, match="closed"):
+            fut.result(timeout=5)
+        ex.shutdown(wait=False)
+    finally:
+        p.destroy()
 
 
 def test_shutdown_cancel_futures():
@@ -241,7 +249,8 @@ def test_drain_reentry_skips(pool, monkeypatch):
     assert entered.wait(5)
     ex._drain()  # skips: the running drain covers this pass
     release.set()
-    t.join(5)
+    t.join(timeout=5)
+    assert not t.is_alive()
     assert fut.result(timeout=5) == 0.5
     ex.shutdown()
 
@@ -269,13 +278,15 @@ def test_cancel_detaching_after_pool_destroy():
     # cancelling after the pool is gone: the announce withdrawal fails
     # into the pool's tombstone, tolerated
     p = pymizu.Pool.create(1)
-    ex = pymizu.PoolExecutor(p)
-    fut = ex.submit(sleep_ident, 0.5)
-    p._h.destroy()  # bypass the facade hooks: the announce dies with it
-    assert fut.cancel()
-    assert fut.cancelled()
-    ex.shutdown(wait=False)
-    p.destroy()
+    try:
+        ex = pymizu.PoolExecutor(p)
+        fut = ex.submit(sleep_ident, 0.5)
+        p._h.destroy()  # bypass the facade hooks: the announce dies with it
+        assert fut.cancel()
+        assert fut.cancelled()
+        ex.shutdown(wait=False)
+    finally:
+        p.destroy()
 
 
 def test_done_callback_destroying_pool_defers():
@@ -283,19 +294,21 @@ def test_done_callback_destroying_pool_defers():
     # listener thread) hands off to a detached thread rather than
     # deadlocking the watch stop on the watched callback
     p = pymizu.Pool.create(1)
-    ex = pymizu.PoolExecutor(p)
-    destroyed = threading.Event()
+    try:
+        ex = pymizu.PoolExecutor(p)
+        destroyed = threading.Event()
 
-    def on_done(f):
+        def on_done(f):
+            p.destroy()
+            destroyed.set()
+
+        fut = ex.submit(square, 3)
+        fut.add_done_callback(on_done)
+        assert fut.result(timeout=5) == 9
+        assert destroyed.wait(5)
+        ex.shutdown(wait=False)
+    finally:
         p.destroy()
-        destroyed.set()
-
-    fut = ex.submit(square, 3)
-    fut.add_done_callback(on_done)
-    assert fut.result(timeout=5) == 9
-    assert destroyed.wait(5)
-    ex.shutdown(wait=False)
-    p.destroy()
 
 
 def test_no_drain_thread(pool):

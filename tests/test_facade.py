@@ -7,19 +7,10 @@ import subprocess
 import sys
 
 import pytest
-from tests.helpers import square
+from tests.helpers import ECHO_PEER, square
 
 import pymizu
 from pymizu import _pymizu
-
-ECHO_PEER = """
-import pymizu
-while True:
-    x = ch.recv()
-    if x is pymizu.CLOSED or x is pymizu.PEER_GONE:
-        break
-    ch.send(x)
-"""
 
 # A peer that attaches through the low-level facade path itself, the way
 # ``python -m pymizu.child`` does: consume the drop, then ready_set.

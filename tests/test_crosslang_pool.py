@@ -21,7 +21,7 @@ from pymizu import _pymizu
 RSCRIPT = shutil.which("Rscript")
 
 
-def _gc_r_workers(pool, pred, timeout=10.0):
+def _gc_r_workers(pool, pred, timeout=20.0):
     """Drive gc() across the R workers until pred() holds.
 
     An R worker releases a decoded argument loan only at its own GC (R

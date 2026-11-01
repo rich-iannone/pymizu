@@ -23,6 +23,7 @@ def _run_without_cloudpickle(tmp_path, script):
         cwd=pathlib.Path(__file__).parent.parent,
         capture_output=True,
         text=True,
+        timeout=120,
     )
     assert res.returncode == 0, res.stderr
 

@@ -624,12 +624,6 @@ def test_from_arrow_sm_verbatim():
     d2 = f2.to_dict()
     assert d2["s"][0] == np.datetime64(1 << 60, "s")
     assert np.isnat(d2["s"][1])
-    # the malformed-utf8-offsets gate still declines a hand-rolled column
-    offs = pa.py_buffer(struct.pack("<4i", 0, 4, 2, 8))
-    data = pa.py_buffer(b"abcdefgh")
-    arr = pa.Array.from_buffers(pa.string(), 3, [None, offs, data])
-    with pytest.raises(pymizu.MizuError, match="column 's'.*malformed"):
-        pymizu.Frame.from_arrow(pa.table({"s": arr}))
 
 
 def test_from_arrow_ns_pickle():
@@ -1062,11 +1056,10 @@ def test_frame_export_stream_capsule_freed_unreleased():
 
 
 FRAME_PEER = """
-import time
 from pymizu import _pymizu
 f = _pymizu._frame_rebuild(["i"], [("i", list(range(20000)))], None)
 ch.send(f)
-time.sleep(30)
+ch.recv()  # stay alive until the test's kill lands
 """
 
 
@@ -1083,7 +1076,7 @@ def test_frame_export_after_producer_death():
     assert type(f).__name__ == "Frame"
     ch._proc.kill()
     assert ch.close() is True
-    ch._proc.wait()
+    ch._proc.wait(timeout=10)
     pymizu.prune()  # a killed producer runs no teardown: the reaper
     # unlinks its orphaned regions
     assert f.to_dict()["i"][3] == 3

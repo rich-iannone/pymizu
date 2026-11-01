@@ -38,6 +38,7 @@ from tests.helpers import (
     raise_with_surrogate_message,
     takes_timeout,
     trace_to_file,
+    wait_guard_held,
     warn_then,
 )
 
@@ -83,6 +84,10 @@ def test_destroy_defers_to_in_flight_collect(pool):
     # destroy(); teardown completes when the collect returns
     t = pool.submit(time.sleep, 0.3)
     th, got = parked_thread(lambda: t.collect(timeout=5))
+    deadline = time.monotonic() + 5  # the collect is parked, not just started
+    while pool.dump()["local"]["collect_parks"] == 0:
+        assert time.monotonic() < deadline
+        time.sleep(0.001)
     pool.destroy()
     th.join(timeout=5)
     assert got == [None]
@@ -98,6 +103,10 @@ def test_destroy_defers_to_worker_run():
     try:
         wk = _pymizu._pool_worker_join(h.token, 0)
         th, got = parked_thread(wk.run)
+        deadline = time.monotonic() + 5  # the run is parked, not just started
+        while not h.dump()["workers"][0]["parked"]:
+            assert time.monotonic() < deadline
+            time.sleep(0.001)
         wk.destroy()
         h.destroy()  # the worker observes the shutdown broadcast and exits
         th.join(timeout=5)
@@ -202,6 +211,7 @@ def test_destroy_breaks_indefinite_ready_wait():
     h = _pymizu._pool_new(1, 1, 64, 64, 128, 512)
     try:
         th, got = parked_thread(lambda: h.ready_wait([0], None))
+        wait_guard_held(lambda: h.ready_wait([0], 0.05))  # the wait is parked
         h.destroy()
         th.join(timeout=5)
         assert got == [False]
@@ -691,14 +701,16 @@ def test_sweep_hook_error_is_unraisable():
             textwrap.dedent(
                 """
                 import threading
-                import time
 
                 import pymizu
                 import pymizu._map
                 from pymizu import _pymizu
 
+                fired = threading.Event()
+
 
                 def boom():
+                    fired.set()
                     raise RuntimeError("sweep boom")
 
 
@@ -712,7 +724,7 @@ def test_sweep_hook_error_is_unraisable():
                     )
                     loop.start()
                     # the idle worker's empty step fires the sweep hook
-                    time.sleep(2)
+                    assert fired.wait(10)
                     pool = pymizu.Pool._wrap(h)
                     pool.stop()
                     loop.join(timeout=10)
@@ -724,6 +736,7 @@ def test_sweep_hook_error_is_unraisable():
         ],
         capture_output=True,
         text=True,
+        timeout=60,
     )
     assert res.returncode == 0, res.stderr
     assert "sweep boom" in res.stderr
@@ -1077,11 +1090,18 @@ def test_status_and_dump(pool):
 
 def test_stats(pool):
     assert pool.submit(busy, 1).collect(timeout=15) == 2
-    # worker counters publish at park/fairness-tick cadence, so poll
+    # worker and submitter counters publish at park/fairness-tick cadence,
+    # so poll until both the task count and the submitter ledger settle
     deadline = time.monotonic() + 10
     while True:
         st = pool.stats()
-        if sum(x["tasks"] for x in st["workers"]) >= 1:
+        s = [x for x in st["submitters"] if x["status"] == "live"]
+        if (
+            sum(x["tasks"] for x in st["workers"]) >= 1
+            and len(s) == 1
+            and s[0]["injected"] >= 1
+            and s[0]["queued"] == s[0]["injected"] - s[0]["claimed"]
+        ):
             break
         assert time.monotonic() < deadline
         time.sleep(0.05)
@@ -1090,27 +1110,8 @@ def test_stats(pool):
     assert w["status"] == "live"
     for key in ("pid", "steals", "injections", "parks", "helps", "deque"):
         assert key in w
-    s = [x for x in st["submitters"] if x["status"] == "live"]
-    assert len(s) == 1
-    assert s[0]["injected"] >= 1
-    assert s[0]["queued"] == s[0]["injected"] - s[0]["claimed"]
     for key in ("pid", "claimed", "spills", "spill_reuse"):
         assert key in s[0]
-
-
-def test_trace(pool):
-    events = []
-    pool.trace(lambda ev, tid: events.append((ev, tid)))
-    t = pool.submit(busy, 1)
-    assert t.collect(timeout=15) == 2
-    assert len(events) == 1
-    assert events[0][0] == "submit"
-    assert re.fullmatch(r"\d+:\d+", events[0][1])
-    pool.trace(None)
-    pool.submit(busy, 2).collect(timeout=15)
-    assert len(events) == 1
-    with pytest.raises(TypeError, match="callable or None"):
-        pool.trace(42)
 
 
 def test_trace_worker_side(tmp_path):
@@ -1148,15 +1149,18 @@ def test_stop_timeout_warns():
     # a worker mid-task cannot observe the shutdown inside the timeout:
     # stop returns False and warns (the worker exits on its own after)
     p = pymizu.Pool.create(1)
-    t = p.submit(time.sleep, 1.5)  # bound: a dropped handle cancels
-    deadline = time.monotonic() + 5
-    while p.dump()["submitters"][0]["claimed"] != 1:
-        assert time.monotonic() < deadline
-        time.sleep(0.01)
-    with pytest.warns(UserWarning, match="timed out"):
-        assert p.stop(timeout=0.05) is False
-    assert p.stop(timeout=10) is True
-    assert t.cancel() is False
+    try:
+        t = p.submit(time.sleep, 1.5)  # bound: a dropped handle cancels
+        deadline = time.monotonic() + 5
+        while p.dump()["submitters"][0]["claimed"] != 1:
+            assert time.monotonic() < deadline
+            time.sleep(0.01)
+        with pytest.warns(UserWarning, match="timed out"):
+            assert p.stop(timeout=0.05) is False
+        assert p.stop(timeout=10) is True
+        assert t.cancel() is False
+    finally:
+        p.stop()
 
 
 def test_worker_base_exception_task_exits_1():
