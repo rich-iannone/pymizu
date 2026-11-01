@@ -47,8 +47,8 @@ def test_wait_and_as_completed(pool):
         assert {f.result() for f in done} == {i * i for i in range(6)}
     with pymizu.PoolExecutor(pool) as ex:
         # the late submit overtakes: resolution rides the publish's wake,
-        # so the quick square completes well ahead of the 0.5s sleep
-        futs = [ex.submit(sleep_ident, 0.5), ex.submit(square, 3)]
+        # so the quick square completes well ahead of the 1s sleep
+        futs = [ex.submit(sleep_ident, 1.0), ex.submit(square, 3)]
         first = next(concurrent.futures.as_completed(futs, timeout=5))
         assert first.result() == 9
 
@@ -109,15 +109,17 @@ def test_cancelled_claim_race_recovers():
     p = pymizu.Pool.create(2)
     try:
         ex = pymizu.PoolExecutor(p)
-        f0 = ex.submit(sleep_ident, 0.6)  # worker A busy
+        f0 = ex.submit(sleep_ident, 0.6)  # both workers busy ...
+        fb = ex.submit(sleep_ident, 0.6)
         time.sleep(0.1)
-        f1 = ex.submit(square, 1)  # claimed by worker B at once
-        assert f1.cancel()  # B's skip frees it CANCEL->FREE
+        f1 = ex.submit(square, 1)  # ... so f1 is still queued here
+        assert f1.cancel()  # the claim skip frees it CANCEL->FREE
         deadline = time.monotonic() + 5
         while f1._task.state != "collected" and time.monotonic() < deadline:
             time.sleep(0.01)
         f2 = ex.submit(square, 2)
         assert f0.result(timeout=5) == 0.6
+        assert fb.result(timeout=5) == 0.6
         assert f2.result(timeout=5) == 4
         assert f1.cancelled()
         ex.shutdown(wait=False)

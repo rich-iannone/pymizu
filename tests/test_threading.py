@@ -11,7 +11,7 @@ import threading
 import time
 
 import pytest
-from tests.helpers import busy, identity, slow
+from tests.helpers import busy, identity, parked_thread, slow
 
 import pymizu
 from pymizu import _pymizu
@@ -23,9 +23,7 @@ def test_channel_concurrent_verbs_raise():
     h = _pymizu._channel_new(64, 1024, 1 << 16, False, b"")
     p, _ = _pymizu._channel_attach(h.token)
     try:
-        received = []
-        parked = threading.Thread(target=lambda: received.append(h.recv()))
-        parked.start()
+        parked, received = parked_thread(h.recv)
         time.sleep(0.1)  # the recv parks inside the guard
         with pytest.raises(pymizu.ConcurrentUseError):
             h.send(b"x")
@@ -54,8 +52,7 @@ def test_channel_concurrent_sends_raise():
     h = _pymizu._channel_new(64, 1024, 1 << 16, False, b"")
     p, _ = _pymizu._channel_attach(h.token)
     try:
-        sender = threading.Thread(target=lambda: h.send(_SlowStage()))
-        sender.start()
+        sender, _ = parked_thread(lambda: h.send(_SlowStage()))
         time.sleep(0.1)  # the slow stage is mid-send inside the guard
         with pytest.raises(pymizu.ConcurrentUseError):
             h.send(1)
@@ -81,11 +78,7 @@ def test_pool_concurrent_submit_raises():
     pool = _pymizu._pool_new(1, 1, 2, 8, 64, 512)
     pool.submit(None)
     pool.submit(None)
-    blocked = []
-    parked = threading.Thread(
-        target=lambda: blocked.append(_capture(pool.submit, None))
-    )
-    parked.start()
+    parked, blocked = parked_thread(lambda: _capture(pool.submit, None))
     time.sleep(0.1)  # the submit parks inside the guard
     try:
         with pytest.raises(pymizu.ConcurrentUseError):
@@ -106,11 +99,7 @@ def test_pool_stop_while_submit_in_flight_raises():
     pool = _pymizu._pool_new(1, 1, 2, 8, 64, 512)
     pool.submit(None)
     pool.submit(None)
-    blocked = []
-    parked = threading.Thread(
-        target=lambda: blocked.append(_capture(pool.submit, None))
-    )
-    parked.start()
+    parked, blocked = parked_thread(lambda: _capture(pool.submit, None))
     time.sleep(0.1)  # the submit parks inside the producer guard
     try:
         with pytest.raises(pymizu.ConcurrentUseError):
@@ -169,11 +158,7 @@ def test_pool_concurrent_submit_collect_stays_loud_and_exact():
 
 def test_channel_ready_wait_holds_the_side():
     h = _pymizu._channel_new(64, 1024, 1 << 16, False, b"")
-    waiting = []
-    parked = threading.Thread(
-        target=lambda: waiting.append(h.ready_wait(None))
-    )
-    parked.start()
+    parked, waiting = parked_thread(lambda: h.ready_wait(None))
     time.sleep(0.1)  # the ready_wait parks inside the guard
     try:
         with pytest.raises(pymizu.ConcurrentUseError):
@@ -191,9 +176,7 @@ def test_channel_close_while_recv_in_flight_raises():
     # the close rendezvous unmaps the region inside the core call: it
     # must refuse a recv parked on the mapping, not unmap under it
     h, p = _chan_pair()
-    received = []
-    parked = threading.Thread(target=lambda: received.append(h.recv()))
-    parked.start()
+    parked, received = parked_thread(h.recv)
     time.sleep(0.1)  # the recv parks inside the guard
     try:
         with pytest.raises(pymizu.ConcurrentUseError):
@@ -211,8 +194,7 @@ def test_channel_close_while_recv_in_flight_raises():
 def test_pool_concurrent_collects_raise():
     with pymizu.Pool.create(1) as pool:
         tasks = [pool.submit(slow, i) for i in range(2)]
-        parked = threading.Thread(target=lambda: pool.collect_all(tasks, None))
-        parked.start()
+        parked, _ = parked_thread(lambda: pool.collect_all(tasks, None))
         time.sleep(0.1)  # the collect_all parks inside the waiter guard
         t = pool.submit(identity, 1)
         with pytest.raises(pymizu.ConcurrentUseError):
@@ -232,11 +214,7 @@ def test_pool_concurrent_collects_raise():
 
 def test_pool_concurrent_ready_wait_raises():
     pool = _pymizu._pool_new(1, 1, 2, 8, 64, 512)
-    waiting = []
-    parked = threading.Thread(
-        target=lambda: waiting.append(pool.ready_wait([0], None))
-    )
-    parked.start()
+    parked, waiting = parked_thread(lambda: pool.ready_wait([0], None))
     time.sleep(0.1)  # the ready_wait parks inside the waiter guard
     try:
         with pytest.raises(pymizu.ConcurrentUseError):

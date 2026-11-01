@@ -75,16 +75,21 @@ def test_recv_async_fifo(ch):
     asyncio.run(main())
 
 
-def test_recv_async_arm_after_data(ch):
+def test_recv_async_arm_after_data():
     # data already in the ring resolves from the arm's synchronous drain
-    async def main():
-        ch.send(1)
-        await asyncio.sleep(0.5)  # the echo is back before the arm
-        fut = ch.recv_async()
-        assert fut.done()
-        assert fut.result() == 1
+    host, peer = chan_pair()
+    try:
 
-    asyncio.run(main())
+        async def main():
+            peer.send(1)  # physically in the ring before the arm
+            fut = host.recv_async()
+            assert fut.done()
+            assert fut.result() == 1
+
+        asyncio.run(main())
+    finally:
+        host.destroy()
+        peer.destroy()
 
 
 def test_recv_async_terminal(ch):
@@ -623,14 +628,15 @@ def test_task_verbs_reject_foreign_pool_tasks():
 
 def test_collect_any_async(pool):
     async def main():
-        tasks = [pool.submit(sleep_ident, 0.1 * (i + 1)) for i in range(3)]
+        # the 0.5s spacing keeps the winner deterministic on loaded runners
+        tasks = [pool.submit(sleep_ident, 0.5 * (i + 1)) for i in range(3)]
         idx, val = await pool.collect_any_async(tasks)
         assert idx == 0
-        assert abs(val - 0.1) < 1e-9
+        assert abs(val - 0.5) < 1e-9
         # the losers stay collectible
         rest = [t.collect(timeout=5) for t in tasks[1:]]
-        assert rest[0] == pytest.approx(0.2)
-        assert rest[1] == pytest.approx(0.3)
+        assert rest[0] == pytest.approx(1.0)
+        assert rest[1] == pytest.approx(1.5)
 
     asyncio.run(main())
 

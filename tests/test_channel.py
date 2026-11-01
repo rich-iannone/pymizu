@@ -9,7 +9,6 @@ import signal
 import subprocess
 import sys
 import threading
-import time
 
 import pytest
 from tests.helpers import (
@@ -17,6 +16,7 @@ from tests.helpers import (
     BytesSubclass,
     StrSubclass,
     UnprintableError,
+    parked_thread,
 )
 
 import pymizu
@@ -275,12 +275,7 @@ def test_destroy_defers_to_in_flight_recv():
     # a recv parked in another thread pins the core handle past
     # destroy(); teardown completes when the recv returns
     h = pymizu._pymizu._channel_new(64, 1024, 1 << 16, False, b"")
-    got = []
-    th = threading.Thread(
-        target=lambda: got.append(h.recv(timeout=0.5)), daemon=True
-    )
-    th.start()
-    time.sleep(0.1)  # the recv is parked with the GIL released
+    th, got = parked_thread(lambda: h.recv(timeout=0.5))
     h.destroy()
     th.join(timeout=5)
     assert got == [pymizu.TIMEOUT]
@@ -296,11 +291,7 @@ def test_destroy_racing_close():
     for _ in range(50):
         h = pymizu._pymizu._channel_new(64, 1024, 1 << 16, False, b"")
         p, _ = pymizu._pymizu._channel_attach(h.token)
-        th = threading.Thread(
-            target=lambda h=h: h.close(timeout=5), daemon=True
-        )
-        th.start()
-        time.sleep(0.02)  # close is parked in the rendezvous wait
+        th, _ = parked_thread(lambda h=h: h.close(timeout=5))
         p.close_signal()
         h.destroy()
         th.join(timeout=5)
@@ -311,12 +302,7 @@ def test_destroy_defers_to_in_flight_ready_wait():
     # a ready_wait parked in another thread pins the core handle past
     # destroy(); teardown completes when the wait returns
     h = pymizu._pymizu._channel_new(64, 1024, 1 << 16, False, b"")
-    got = []
-    th = threading.Thread(
-        target=lambda: got.append(h.ready_wait(0.5)), daemon=True
-    )
-    th.start()
-    time.sleep(0.1)  # the wait is parked with the GIL released
+    th, got = parked_thread(lambda: h.ready_wait(0.5))
     h.destroy()
     th.join(timeout=5)
     assert got == [False]
@@ -330,10 +316,7 @@ def test_destroy_breaks_indefinite_recv():
     # thread breaks it out as CLOSED, and the teardown runs promptly
     h = pymizu._pymizu._channel_new(64, 1024, 1 << 16, False, b"")
     p, _ = pymizu._pymizu._channel_attach(h.token)
-    got = []
-    th = threading.Thread(target=lambda: got.append(h.recv()), daemon=True)
-    th.start()
-    time.sleep(0.1)  # the recv is parked with the GIL released
+    th, got = parked_thread(h.recv)
     h.destroy()
     th.join(timeout=5)
     assert got == [pymizu.CLOSED]
@@ -343,12 +326,7 @@ def test_destroy_breaks_indefinite_recv():
 
 def test_destroy_breaks_indefinite_ready_wait():
     h = pymizu._pymizu._channel_new(64, 1024, 1 << 16, False, b"")
-    got = []
-    th = threading.Thread(
-        target=lambda: got.append(h.ready_wait(None)), daemon=True
-    )
-    th.start()
-    time.sleep(0.1)  # the wait is parked with the GIL released
+    th, got = parked_thread(lambda: h.ready_wait(None))
     h.destroy()
     th.join(timeout=5)
     assert got == [False]
@@ -360,12 +338,7 @@ def test_destroy_breaks_indefinite_close():
     # teardown still completes the close for the peer
     h = pymizu._pymizu._channel_new(64, 1024, 1 << 16, False, b"")
     p, _ = pymizu._pymizu._channel_attach(h.token)
-    got = []
-    th = threading.Thread(
-        target=lambda: got.append(h.close(None)), daemon=True
-    )
-    th.start()
-    time.sleep(0.1)  # close is parked in the rendezvous wait
+    th, got = parked_thread(lambda: h.close(None))
     h.destroy()
     th.join(timeout=5)
     assert got == [False]
@@ -378,12 +351,7 @@ def test_destroy_breaks_indefinite_recv_batch():
     # first message, so a destroy breaks it out as CLOSED
     h = pymizu._pymizu._channel_new(64, 1024, 1 << 16, False, b"")
     p, _ = pymizu._pymizu._channel_attach(h.token)
-    got = []
-    th = threading.Thread(
-        target=lambda: got.append(h.recv_batch(4)), daemon=True
-    )
-    th.start()
-    time.sleep(0.1)  # the batch wait is parked with the GIL released
+    th, got = parked_thread(lambda: h.recv_batch(4))
     h.destroy()
     th.join(timeout=5)
     assert got == [pymizu.CLOSED]

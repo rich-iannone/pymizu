@@ -26,6 +26,7 @@ from tests.helpers import (
     large_args_integrity,
     make_fail_on_unpickle,
     make_unpicklable,
+    parked_thread,
     raise_deep,
     raise_keyboard_interrupt,
     raise_long,
@@ -81,12 +82,7 @@ def test_destroy_defers_to_in_flight_collect(pool):
     # a collect parked in another thread pins the core handle past
     # destroy(); teardown completes when the collect returns
     t = pool.submit(time.sleep, 0.3)
-    got = []
-    th = threading.Thread(
-        target=lambda: got.append(t.collect(timeout=5)), daemon=True
-    )
-    th.start()
-    time.sleep(0.1)  # the collect is parked with the GIL released
+    th, got = parked_thread(lambda: t.collect(timeout=5))
     pool.destroy()
     th.join(timeout=5)
     assert got == [None]
@@ -101,10 +97,7 @@ def test_destroy_defers_to_worker_run():
     h = _pymizu._pool_new(1, 8, 64, 64, 64, 512)
     try:
         wk = _pymizu._pool_worker_join(h.token, 0)
-        got = []
-        th = threading.Thread(target=lambda: got.append(wk.run()), daemon=True)
-        th.start()
-        time.sleep(0.1)  # the worker is parked idle
+        th, got = parked_thread(wk.run)
         wk.destroy()
         h.destroy()  # the worker observes the shutdown broadcast and exits
         th.join(timeout=5)
@@ -208,12 +201,7 @@ def test_destroy_breaks_indefinite_collect_all(pool):
 def test_destroy_breaks_indefinite_ready_wait():
     h = _pymizu._pool_new(1, 1, 64, 64, 128, 512)
     try:
-        got = []
-        th = threading.Thread(
-            target=lambda: got.append(h.ready_wait([0], None)), daemon=True
-        )
-        th.start()
-        time.sleep(0.1)  # the wait is parked with the GIL released
+        th, got = parked_thread(lambda: h.ready_wait([0], None))
         h.destroy()
         th.join(timeout=5)
         assert got == [False]
@@ -530,7 +518,7 @@ def test_submit_callable_timeout_kwarg(pool):
 
 
 def test_collect_any(pool):
-    slow = pool.submit(time.sleep, 1.0)
+    slow = pool.submit(time.sleep, 2.0)
     fast = pool.submit(len, [1, 2, 3])
     idx, val = pool.collect_any([slow, fast], timeout=10)
     assert (idx, val) == (1, 3)

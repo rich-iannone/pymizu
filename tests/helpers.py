@@ -305,6 +305,28 @@ def sleep_ident(t):
     return t
 
 
+def parked_thread(fn):
+    """Spawn a daemon thread calling ``fn()`` and return once the thread
+    is at the verb's door — the deterministic stand-in for ``start()``
+    plus a sleep, whose budget thread-start latency can exceed on a
+    loaded runner. Returns ``(thread, results)``: the call's return
+    value or raised exception, appended when it returns."""
+    results = []
+    at_door = threading.Event()
+
+    def run():
+        at_door.set()
+        try:
+            results.append(fn())
+        except Exception as e:
+            results.append(e)
+
+    th = threading.Thread(target=run, daemon=True)
+    th.start()
+    assert at_door.wait(5)
+    return th, results
+
+
 def takes_timeout(*, timeout=None):
     """A callable with its own ``timeout=`` kwarg: it collides with the
     submit keyword, so it must ride in via functools.partial."""
