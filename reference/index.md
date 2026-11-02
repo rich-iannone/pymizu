@@ -125,8 +125,8 @@ Orderly shutdown (controller only).
 [Pool.destroy()](Pool.destroy.md#pymizu.Pool.destroy)  
 Tear down the pool handle immediately, without telling the
 
-[Pool.status()](Pool.status.md#pymizu.Pool.status)  
-A read-only snapshot of the pool's state (dict).
+[Pool.info()](Pool.info.md#pymizu.Pool.info)  
+A read-only snapshot of the pool's state (dict), including
 
 [Pool.dump()](Pool.dump.md#pymizu.Pool.dump)  
 A read-only debugging snapshot of the whole pool region (dict).
@@ -167,6 +167,9 @@ R peers and workers (the mizu R package), neutral task specifications, and the d
 
 [call](call.md#pymizu.call)  
 A task specification for a pool of another language's workers.
+
+[launcher()](launcher.md#pymizu.launcher)  
+Return a launcher spawning Python processes running pymizu.
 
 [r_launcher()](r_launcher.md#pymizu.r_launcher)  
 Return a launcher spawning R processes running the `mizu` package.
@@ -216,7 +219,7 @@ Test whether a received channel value is a remote error.
 Base class for all pymizu errors.
 
 [ShmError](ShmError.md#pymizu.ShmError)  
-A shared-memory region operation failed. Also an OSError: the failure is at the OS layer.
+A shared-memory region operation failed. Also an OSError: the failure is at the OS layer. Carries a 'bytes' attribute: the requested size of a region that was not created, None when a region was not opened.
 
 [StartupError](StartupError.md#pymizu.StartupError)  
 A channel peer or pool worker failed to attach within the startup timeout.
@@ -234,7 +237,7 @@ The pool is stopped; no further submission is possible.
 The task was cancelled before it ran.
 
 [TaskError](TaskError.md#pymizu.TaskError)  
-The task callable raised. Carries 'remote_type' and 'remote_traceback' attributes describing the worker-side exception.
+The task callable raised. Carries 'remote_type' and 'detail' attributes describing the worker-side exception.
 
 [WorkerDiedError](WorkerDiedError.md#pymizu.WorkerDiedError)  
 The executing worker died mid-task. Carries 'slot' and 'pid' attributes identifying the worker.
@@ -243,7 +246,10 @@ The executing worker died mid-task. Carries 'slot' and 'pid' attributes identify
 The claimant's read of the task's payload region failed without a death verdict -- a vanished or unreadable region, not a dead worker.
 
 [DeclinedError](DeclinedError.md#pymizu.DeclinedError)  
-A send on a foreign-language channel of a value outside the portable interchange subset. Carries 'path' and 'reason' attributes.
+A send on a foreign-language channel of a value outside the portable interchange subset. Carries 'path' and 'reason' attributes ('reason' includes the one-line rewrite guidance for the value).
+
+[ForeignPayloadError](ForeignPayloadError.md#pymizu.ForeignPayloadError)  
+A received payload in a language-private or unrecognized format: a peer sent outside the portable interchange subset. The message is consumed, never wedging the ring; the async drain rejects only the head waiter and continues.
 
 [ConcurrentUseError](ConcurrentUseError.md#pymizu.ConcurrentUseError)  
 A verb ran concurrently with another verb in the same handle role: each handle role is confined to one thread at a time (libmizu 'Handle threading').
@@ -269,6 +275,3 @@ The current element's own numpy Generator, inside a seeded map.
 
 [prune()](prune.md#pymizu.prune)  
 Remove orphaned shared memory regions.
-
-[abi_version()](abi_version.md#pymizu.abi_version)  
-abi_version() -\> int

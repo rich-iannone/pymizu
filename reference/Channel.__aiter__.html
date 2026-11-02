@@ -470,8 +470,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../reference/Pool.status.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Pool.status</span></a>
+  <a href="../reference/Pool.info.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Pool.info</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -566,6 +566,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <div class="sidebar-item-container"> 
   <a href="../reference/call.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">call</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../reference/launcher.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">launcher</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -736,6 +742,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../reference/ForeignPayloadError.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">ForeignPayloadError</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../reference/ConcurrentUseError.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">ConcurrentUseError</span></a>
   </div>
@@ -787,12 +799,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text">prune</span></a>
   </div>
 </li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../reference/abi_version.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">abi_version</span></a>
-  </div>
-</li>
       </ul>
   </li>
     </ul>
@@ -830,7 +836,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div class="doc-usage-source">
 <p>Usage</p>
-<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L332-L346" target="_blank" rel="noopener">Source</a></p>
+<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L394-L416" target="_blank" rel="noopener">Source</a></p>
 </div>
 <div class="doc-signature doc-function">
 <div class="sourceCode" id="cb1"><pre class="sourceCode pythonsignature"><code class="sourceCode pythonsignature"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dt">Channel</span><span class="op">.</span><span class="fu">__aiter__</span>()</span></code></pre></div>
@@ -838,6 +844,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="doc-text">
 <p>the async form of the sync iterator.</p>
 <p>Yields payloads as they arrive, awaiting each through <a href="../reference/Channel.recv_async.html#pymizu.Channel.recv_async" class="gdls-link"><code>recv_async()</code></a>. Between iterations nothing is armed; the next iteration re-arms and the arm’s synchronous drain picks up whatever arrived meanwhile (loss-free).</p>
+<p>A declined foreign payload (see <a href="../reference/Channel.recv_async.html#pymizu.Channel.recv_async" class="gdls-link"><code>recv_async()</code></a>) propagates out of the iteration and ends the <code>async for</code> statement — a try/except inside the loop body cannot catch it. To skip one, wrap the whole loop and re-enter on the same channel: the consumer kept flowing, and the new iterator picks up the next message.</p>
 </div>
 
 

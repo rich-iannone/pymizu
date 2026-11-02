@@ -21,7 +21,7 @@ while True:
 
 The peer is a full Python process: it imports anything importable in the spawning interpreter's environment. [Channel.create()](../reference/Channel.create.md#pymizu.Channel.create) returns after the peer connects. It waits up to `startup_timeout` seconds and raises [StartupError](../reference/StartupError.md#pymizu.StartupError) on expiry.
 
-A `launcher` changes how pymizu spawns the peer. It is one callable that takes the channel's token and arranges for the peer process to start. [pymizu.r_launcher()](../reference/r_launcher.md#pymizu.r_launcher) is the built-in example: it spawns an R peer instead (see [R interop](interop.md)). User code spawns peers through a launcher.
+A [launcher](../reference/launcher.md#pymizu.launcher) changes how pymizu spawns the peer. It is one callable that takes the channel's token and arranges for the peer process to start. [pymizu.r_launcher()](../reference/r_launcher.md#pymizu.r_launcher) is the built-in example: it spawns an R peer instead (see [R interop](interop.md)). User code spawns peers through a launcher.
 
 ## Sending and receiving
 
@@ -70,6 +70,8 @@ await ch.recv_async()
     2
 
 `async for x in ch` is the stream form: it awaits each value through [recv_async()](../reference/Channel.recv_async.md#pymizu.Channel.recv_async) and ends on `CLOSED` or `PEER_GONE`, exactly as the sync iterator ends.
+
+A message the peer sent outside the portable interchange subset (a language-private stream) is declined at read time with [ForeignPayloadError](../reference/ForeignPayloadError.md#pymizu.ForeignPayloadError): the message is consumed and the channel keeps flowing. [recv_async()](../reference/Channel.recv_async.md#pymizu.Channel.recv_async) rejects only the waiter that receives it; the other outstanding calls are unaffected. The rejection also ends an `async for` statement -- a try/except inside the loop body cannot catch it; wrap the whole loop and re-enter on the same channel to skip the message.
 
 ## Closing
 

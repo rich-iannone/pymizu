@@ -28,7 +28,7 @@ A [`Frame`](../reference/Frame.md#pymizu.Frame) argument follows the same rule. 
 
 | Outcome | On collect |
 |----|----|
-| The task raised | [pymizu.TaskError](../reference/TaskError.md#pymizu.TaskError), with `remote_type` and `remote_traceback` |
+| The task raised | [pymizu.TaskError](../reference/TaskError.md#pymizu.TaskError), with `remote_type` and `detail` |
 | The task was cancelled before it ran | [pymizu.CancelledError](../reference/CancelledError.md#pymizu.CancelledError) |
 | The executing worker died | [pymizu.WorkerDiedError](../reference/WorkerDiedError.md#pymizu.WorkerDiedError), with `slot` and `pid` |
 | The task's payload region vanished without a death verdict | [pymizu.TaskLostError](../reference/TaskLostError.md#pymizu.TaskLostError) |
@@ -144,7 +144,7 @@ Other processes join a running pool as submitters with `Pool.attach(token)`. The
 Four read-only tools watch a running pool without disturbing it:
 
 ``` python
-pool.status()   # snapshot: worker states, queued tasks, result slots
+pool.info()   # snapshot: worker states, queued tasks, result slots
 pool.stats()    # cumulative counters since each participant joined
 pool.dump()     # every slot in full detail -- the first tool when a pool hangs
 pool.trace(fn)  # fn(event, id) at each task lifecycle event; None removes it

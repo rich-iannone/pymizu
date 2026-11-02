@@ -379,6 +379,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>ch.close()</span></code></pre></div>
 <p>From Python, also declined: Arrow nested, <code>date64</code>, <code>time</code>, and <code>interval</code> columns. An Arrow <code>uint8</code> column <em>with nulls</em> is a <code>TypeError</code>: an R raw vector has no <code>NA</code>.</p>
 <p>From R: a <code>POSIXlt</code> time, a character matrix, and S4 objects stay on R’s side. So does a named vector with a class or of character type (a named character vector, factor, <code>Date</code>, or <code>POSIXct</code>), since names travel only on the plain atomic vectors. Among data frames: a data.table, a groupedData-style frame (a formula attribute), and a column that is itself a labeled matrix.</p>
+<p>The mirror image of the send-time decline is a value that arrives in a language-private format — one no send gate caught (an attach race, or a misbehaving or version-skewed peer). The read raises <a href="../reference/ForeignPayloadError.html#pymizu.ForeignPayloadError" class="gdls-link"><code>ForeignPayloadError</code></a> and the message is consumed, so one bad payload never wedges the channel; under <a href="../reference/Channel.recv_async.html#pymizu.Channel.recv_async" class="gdls-link gdls-code">recv_async()</a> only that message’s waiter rejects and the async consumer keeps flowing.</p>
 </section>
 <section id="pymizu.frame" class="level1">
 <h1>pymizu.Frame</h1>

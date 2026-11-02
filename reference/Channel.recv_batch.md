@@ -4,7 +4,7 @@ Receive up to `n` values in one call; a list (possibly
 
 Usage
 
-[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L348-L353)
+[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L418-L423)
 
 ``` python
 Channel.recv_batch(

@@ -470,8 +470,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../reference/Pool.status.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Pool.status</span></a>
+  <a href="../reference/Pool.info.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Pool.info</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -566,6 +566,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <div class="sidebar-item-container"> 
   <a href="../reference/call.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">call</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../reference/launcher.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">launcher</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -736,6 +742,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../reference/ForeignPayloadError.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">ForeignPayloadError</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../reference/ConcurrentUseError.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">ConcurrentUseError</span></a>
   </div>
@@ -787,12 +799,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text">prune</span></a>
   </div>
 </li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../reference/abi_version.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">abi_version</span></a>
-  </div>
-</li>
       </ul>
   </li>
     </ul>
@@ -835,7 +841,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb1"><pre class="sourceCode pythonsignature"><code class="sourceCode pythonsignature"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dt">Task</span><span class="op">.</span><span class="fu">collect</span>(<span class="va">timeout</span><span class="op">=</span><span class="cn">None</span>)</span></code></pre></div>
 </div>
 <div class="doc-text">
-<p>Wait up to <code>timeout</code> seconds (None indefinitely, 0 polls once) for the task to finish and return its result. A task error re-raises as pymizu.TaskError (carrying remote_type / remote_traceback), a cancellation as pymizu.CancelledError, a dead worker as pymizu.WorkerDiedError, a lost result as pymizu.TaskLostError. pymizu.TIMEOUT on expiry; a task is collected exactly once.</p>
+<p>Wait up to <code>timeout</code> seconds (None indefinitely, 0 polls once) for the task to finish and return its result. A task error re-raises as pymizu.TaskError (carrying remote_type / detail), a cancellation as pymizu.CancelledError, a dead worker as pymizu.WorkerDiedError, a lost result as pymizu.TaskLostError. pymizu.TIMEOUT on expiry; a task is collected exactly once.</p>
 </div>
 
 

@@ -4,7 +4,7 @@ Remove orphaned shared memory regions.
 
 Usage
 
-[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L1444-L1472)
+[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L1509-L1537)
 
 ``` python
 prune()

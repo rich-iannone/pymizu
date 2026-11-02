@@ -470,8 +470,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../reference/Pool.status.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Pool.status</span></a>
+  <a href="../reference/Pool.info.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Pool.info</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -566,6 +566,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <div class="sidebar-item-container"> 
   <a href="../reference/call.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">call</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../reference/launcher.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">launcher</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -736,6 +742,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../reference/ForeignPayloadError.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">ForeignPayloadError</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../reference/ConcurrentUseError.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">ConcurrentUseError</span></a>
   </div>
@@ -787,12 +799,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text">prune</span></a>
   </div>
 </li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../reference/abi_version.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">abi_version</span></a>
-  </div>
-</li>
       </ul>
   </li>
     </ul>
@@ -837,7 +843,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div class="doc-usage-source">
 <p>Usage</p>
-<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L301-L330" target="_blank" rel="noopener">Source</a></p>
+<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L356-L392" target="_blank" rel="noopener">Source</a></p>
 </div>
 <div class="doc-signature doc-function">
 <div class="sourceCode" id="cb1"><pre class="sourceCode pythonsignature"><code class="sourceCode pythonsignature"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dt">Channel</span><span class="op">.</span><span class="fu">recv_async</span>()</span></code></pre></div>
@@ -859,6 +865,7 @@ blocking <a href="../reference/Channel.recv.html#pymizu.Channel.recv" class="gdl
 <section id="details" class="level2 doc-details">
 <h2 class="doc-details anchored" data-anchor-id="details">Details</h2>
 <p>Several outstanding calls on one channel resolve in call order, one message each. Nothing is lost while arming: values already in the ring resolve immediately, and only values not yet sent wait for the wake-up. Cancelling the Future detaches the waiter — the next message goes to the next waiter. There is no <code>timeout</code> argument: use <code>asyncio.timeout</code> or <code>asyncio.wait_for</code>. A channel created with <code>spin=True</code> cannot arm and raises. The async consumer is the side’s one consumer: a blocking <a href="../reference/Channel.recv.html#pymizu.Channel.recv" class="gdls-link"><code>recv()</code></a> on the same side while waiters are pending raises <a href="../reference/ConcurrentUseError.html#pymizu.ConcurrentUseError" class="gdls-link"><code>ConcurrentUseError</code></a>.</p>
+<p>A message the peer sent outside the portable interchange subset (a language-private stream) rejects only the waiter that receives it, with <a href="../reference/ForeignPayloadError.html#pymizu.ForeignPayloadError" class="gdls-link"><code>ForeignPayloadError</code></a> — the message is consumed and the async consumer keeps flowing, so the other outstanding calls are unaffected.</p>
 
 
 </section>

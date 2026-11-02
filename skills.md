@@ -107,7 +107,7 @@ Methods for the Pool class
 - `Pool.spawn_workers`
 - `Pool.stop`
 - `Pool.destroy`
-- `Pool.status`
+- `Pool.info`
 - `Pool.dump`
 - `Pool.stats`
 - `Pool.trace`
@@ -130,6 +130,7 @@ Methods for the Task class
 R peers and workers (the mizu R package), neutral task specifications, and the data.frame's Python home.
 
 - `call`: A task specification for a pool of another language's workers
+- `launcher`: Return a launcher spawning Python processes running pymizu
 - `r_launcher`: Return a launcher spawning R processes running the `mizu` package
 - `Frame`: A data.frame's Python home: named columns with a row count
 - `DimArray`: An `ndarray` carrying R labels (`names` / `dimnames` /
@@ -154,16 +155,17 @@ A full ring, a timeout, a close, or a dead peer returns as a sentinel singleton 
 - `is_sentinel`: is_sentinel(x) -> bool
 - `is_remote_error`: Test whether a received channel value is a remote error
 - `MizuError`: Base class for all pymizu errors
-- `ShmError`: A shared-memory region operation failed. Also an OSError: the failure is at the OS layer
+- `ShmError`: A shared-memory region operation failed. Also an OSError: the failure is at the OS layer. Carries a 'bytes' attribute: the requested size of a region that was not created, None when a region was not opened
 - `StartupError`: A channel peer or pool worker failed to attach within the startup timeout
 - `SubmitTimeoutError`: Pool.submit() timed out waiting for injection-ring space. Also a TimeoutError
 - `SlotsExhaustedError`: Pool.submit() found no free result slot: too many outstanding (uncollected) tasks
 - `StoppedError`: The pool is stopped; no further submission is possible
 - `CancelledError`: The task was cancelled before it ran
-- `TaskError`: The task callable raised. Carries 'remote_type' and 'remote_traceback' attributes describing the worker-side exception
+- `TaskError`: The task callable raised. Carries 'remote_type' and 'detail' attributes describing the worker-side exception
 - `WorkerDiedError`: The executing worker died mid-task. Carries 'slot' and 'pid' attributes identifying the worker
 - `TaskLostError`: The claimant's read of the task's payload region failed without a death verdict -- a vanished or unreadable region, not a dead worker
-- `DeclinedError`: A send on a foreign-language channel of a value outside the portable interchange subset. Carries 'path' and 'reason' attributes
+- `DeclinedError`: A send on a foreign-language channel of a value outside the portable interchange subset. Carries 'path' and 'reason' attributes ('reason' includes the one-line rewrite guidance for the value)
+- `ForeignPayloadError`: A received payload in a language-private or unrecognized format: a peer sent outside the portable interchange subset. The message is consumed, never wedging the ring; the async drain rejects only the head waiter and continues
 - `ConcurrentUseError`: A verb ran concurrently with another verb in the same handle role: each handle role is confined to one thread at a time (libmizu 'Handle threading')
 
 ### Housekeeping
@@ -176,7 +178,6 @@ The process-wide default pool, the current worker's own pool handle, and cleanin
 - `current_pool`: The pool handle of the worker running the task
 - `current_rng`: The current element's own numpy Generator, inside a seeded map
 - `prune`: Remove orphaned shared memory regions
-- `abi_version`: abi_version() -> int
 
 ## Resources
 

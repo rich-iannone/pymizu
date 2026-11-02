@@ -4,7 +4,7 @@ Create a channel and spawn its peer.
 
 Usage
 
-[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L131-L210)
+[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L186-L265)
 
 ``` python
 Channel.create(
@@ -40,7 +40,7 @@ Busy-wait rather than sleep while waiting.
 Seconds to wait for the peer to attach.
 
 `launcher: _Callable[[str], _Any] | None = None`  
-A `callable(token)` arranging for a Python process to run `python -m pymizu.child <token>`; the default spawns `sys.executable` directly. [`r_launcher()`](../reference/r_launcher.md#pymizu.r_launcher) returns one spawning an R peer (the R package `mizu`).
+A `callable(token)` arranging for a Python process to run `python -m pymizu.child <token>`; the default is [`launcher()`](../reference/launcher.md#pymizu.launcher) (spawns `sys.executable` directly). [`r_launcher()`](../reference/r_launcher.md#pymizu.r_launcher) returns one spawning an R peer (the R package `mizu`).
 
 ## Returns
 

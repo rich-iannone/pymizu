@@ -4,7 +4,7 @@ The pool handle of the worker running the task.
 
 Usage
 
-[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L1491-L1507)
+[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L1556-L1572)
 
 ``` python
 current_pool()

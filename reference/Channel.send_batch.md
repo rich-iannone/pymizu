@@ -4,7 +4,7 @@ Send several values in one call; return the number accepted
 
 Usage
 
-[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L272-L275)
+[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L327-L330)
 
 ``` python
 Channel.send_batch(xs)

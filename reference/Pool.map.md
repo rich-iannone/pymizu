@@ -4,7 +4,7 @@ Map `fn` over `x` on the pool; return a map handle.
 
 Usage
 
-[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L994-L1203)
+[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L1054-L1265)
 
 ``` python
 Pool.map(
@@ -65,7 +65,7 @@ for the results -- a list in input order, or with `template` the gathered output
 A task error re-raises from the collect as TaskError carrying the failing element's 0-based `index`; the map fails fast (workers stop within about one batch).
 
 `WorkerDiedError`  
-Worker death carries the lost element ranges as `lost` (0-based half-open `(lo, hi)` pairs, possibly wider than what was lost).
+Worker death carries the lost element ranges as `lost` (0-based half-open `(lo, hi)` pairs, possibly wider than what was lost; mizu's `mizu_error_worker_died$lost` carries the same set as a two-column matrix of inclusive 1-based ranges).
 
 `TypeError`  
 A [`call`](../reference/call.md#pymizu.call) spec as `fn` with `stream=True`.

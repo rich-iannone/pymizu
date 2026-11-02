@@ -116,6 +116,8 @@ From Python, also declined: Arrow nested, `date64`, `time`, and `interval` colum
 
 From R: a `POSIXlt` time, a character matrix, and S4 objects stay on R's side. So does a named vector with a class or of character type (a named character vector, factor, `Date`, or `POSIXct`), since names travel only on the plain atomic vectors. Among data frames: a data.table, a groupedData-style frame (a formula attribute), and a column that is itself a labeled matrix.
 
+The mirror image of the send-time decline is a value that arrives in a language-private format -- one no send gate caught (an attach race, or a misbehaving or version-skewed peer). The read raises [`ForeignPayloadError`](../reference/ForeignPayloadError.md#pymizu.ForeignPayloadError) and the message is consumed, so one bad payload never wedges the channel; under [recv_async()](../reference/Channel.recv_async.md#pymizu.Channel.recv_async) only that message's waiter rejects and the async consumer keeps flowing.
+
 ## pymizu.Frame
 
 A [pymizu.Frame](../reference/Frame.md#pymizu.Frame) is Python's home for an R `data.frame`: named columns with a row count. `frame.to_dict()` returns the columns as a dict: numpy arrays when numpy is installed, memoryviews otherwise, strings and factors as `list[str | None]`. `frame.names` and `frame.row_names` carry the metadata.

@@ -4,7 +4,7 @@ Create a pool and spawn its worker processes.
 
 Usage
 
-[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L662-L742)
+[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L721-L802)
 
 ``` python
 Pool.create(
@@ -48,7 +48,7 @@ Bytes per queue entry and result slot; a larger payload travels in its own share
 Seconds to wait for the workers to attach.
 
 `launcher: _Callable[[str, int], _Any] | None = None`  
-A `callable(token, slot)` arranging for a Python process to run `python -m pymizu.worker <token> <slot>`; the default spawns `sys.executable` directly.
+A `callable(token, slot)` arranging for a Python process to run `python -m pymizu.worker <token> <slot>`; the default is [`launcher()`](../reference/launcher.md#pymizu.launcher) (spawns `sys.executable` directly).
 
 ## Returns
 

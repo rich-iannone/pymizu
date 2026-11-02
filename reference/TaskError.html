@@ -8,7 +8,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="The task callable raised. Carries ‘remote_type’ and ‘remote_traceback’ attributes describing the worker-side exception.">
+<meta name="description" content="The task callable raised. Carries ‘remote_type’ and ‘detail’ attributes describing the worker-side exception.">
 
 <title>TaskError | pymizu</title>
 <script type="application/ld+json">[{"@context": "https://schema.org", "@type": "SoftwareSourceCode", "name": "pymizu", "description": "Zero-copy async and parallel IPC across Python and R", "codeRepository": "https://github.com/shikokuchuo/pymizu", "license": "https://opensource.org/licenses/MIT", "url": "https://shikokuchuo.net/pymizu", "documentation": "https://shikokuchuo.net/pymizu", "programmingLanguage": {"@type": "ComputerLanguage", "name": "Python"}}, {"@context": "https://schema.org", "@type": "WebPage", "name": "TaskError - pymizu", "isPartOf": {"@type": "WebSite", "name": "pymizu"}, "url": "https://shikokuchuo.net/pymizu/reference/TaskError.html"}]</script>
@@ -133,11 +133,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <meta property="og:title" content="TaskError | pymizu">
-<meta property="og:description" content="The task callable raised. Carries ‘remote_type’ and ‘remote_traceback’ attributes describing the worker-side exception.">
+<meta property="og:description" content="The task callable raised. Carries ‘remote_type’ and ‘detail’ attributes describing the worker-side exception.">
 <meta property="og:image" content="https://shikokuchuo.net/pymizu/assets/og-image.png">
 <meta property="og:site_name" content="pymizu">
 <meta name="twitter:title" content="TaskError | pymizu">
-<meta name="twitter:description" content="The task callable raised. Carries ‘remote_type’ and ‘remote_traceback’ attributes describing the worker-side exception.">
+<meta name="twitter:description" content="The task callable raised. Carries ‘remote_type’ and ‘detail’ attributes describing the worker-side exception.">
 <meta name="twitter:image" content="https://shikokuchuo.net/pymizu/assets/og-image.png">
 <meta name="twitter:card" content="summary_large_image">
 </head>
@@ -470,8 +470,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../reference/Pool.status.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Pool.status</span></a>
+  <a href="../reference/Pool.info.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Pool.info</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -566,6 +566,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <div class="sidebar-item-container"> 
   <a href="../reference/call.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">call</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../reference/launcher.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">launcher</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -736,6 +742,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../reference/ForeignPayloadError.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">ForeignPayloadError</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../reference/ConcurrentUseError.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">ConcurrentUseError</span></a>
   </div>
@@ -787,12 +799,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text">prune</span></a>
   </div>
 </li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../reference/abi_version.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">abi_version</span></a>
-  </div>
-</li>
       </ul>
   </li>
     </ul>
@@ -826,7 +832,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <div class="doc-subject">
-<p>The task callable raised. Carries ‘remote_type’ and ‘remote_traceback’ attributes describing the worker-side exception.</p>
+<p>The task callable raised. Carries ‘remote_type’ and ‘detail’ attributes describing the worker-side exception.</p>
 </div>
 <div class="doc-usage-source">
 <p>Usage</p>

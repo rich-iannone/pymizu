@@ -4,7 +4,7 @@ Spawn `n` additional workers and wait for them to join
 
 Usage
 
-[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L1306-L1350)
+[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L1368-L1412)
 
 ``` python
 Pool.spawn_workers(
@@ -26,7 +26,7 @@ Number of workers to spawn.
 Seconds to wait for the workers to attach.
 
 `launcher: _Callable[[str, int], _Any] | None = None`  
-As for [`Pool.create()`](../reference/Pool.create.md#pymizu.Pool.create); the default spawns `sys.executable` directly.
+As for [`Pool.create()`](../reference/Pool.create.md#pymizu.Pool.create); the default is [`launcher()`](../reference/launcher.md#pymizu.launcher).
 
 ## Returns
 

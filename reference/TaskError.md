@@ -1,6 +1,6 @@
 # TaskError
 
-The task callable raised. Carries 'remote_type' and 'remote_traceback' attributes describing the worker-side exception.
+The task callable raised. Carries 'remote_type' and 'detail' attributes describing the worker-side exception.
 
 Usage
 

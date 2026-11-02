@@ -435,8 +435,8 @@ ul.task-list li input[type="checkbox"] {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../reference/Pool.status.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Pool.status</span></a>
+  <a href="../reference/Pool.info.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Pool.info</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -531,6 +531,12 @@ ul.task-list li input[type="checkbox"] {
   <div class="sidebar-item-container"> 
   <a href="../reference/call.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">call</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../reference/launcher.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">launcher</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -701,6 +707,12 @@ ul.task-list li input[type="checkbox"] {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../reference/ForeignPayloadError.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">ForeignPayloadError</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../reference/ConcurrentUseError.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">ConcurrentUseError</span></a>
   </div>
@@ -750,12 +762,6 @@ ul.task-list li input[type="checkbox"] {
   <div class="sidebar-item-container"> 
   <a href="../reference/prune.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">prune</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../reference/abi_version.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">abi_version</span></a>
   </div>
 </li>
       </ul>
@@ -982,9 +988,9 @@ ul.task-list li input[type="checkbox"] {
 <dd>
 <p>Tear down the pool handle immediately, without telling the</p>
 </dd>
-<dt><a href="../reference/Pool.status.html#pymizu.Pool.status" class="doc-function doc-label doc-label-method">Pool.status()</a></dt>
+<dt><a href="../reference/Pool.info.html#pymizu.Pool.info" class="doc-function doc-label doc-label-method">Pool.info()</a></dt>
 <dd>
-<p>A read-only snapshot of the pool’s state (dict).</p>
+<p>A read-only snapshot of the pool’s state (dict), including</p>
 </dd>
 <dt><a href="../reference/Pool.dump.html#pymizu.Pool.dump" class="doc-function doc-label doc-label-method">Pool.dump()</a></dt>
 <dd>
@@ -1049,6 +1055,10 @@ ul.task-list li input[type="checkbox"] {
 <dt><a href="../reference/call.html#pymizu.call" class="doc-class doc-label doc-label-class">call</a></dt>
 <dd>
 <p>A task specification for a pool of another language’s workers.</p>
+</dd>
+<dt><a href="../reference/launcher.html#pymizu.launcher" class="doc-function doc-label doc-label-function">launcher()</a></dt>
+<dd>
+<p>Return a launcher spawning Python processes running pymizu.</p>
 </dd>
 <dt><a href="../reference/r_launcher.html#pymizu.r_launcher" class="doc-function doc-label doc-label-function">r_launcher()</a></dt>
 <dd>
@@ -1124,7 +1134,7 @@ ul.task-list li input[type="checkbox"] {
 </dd>
 <dt><a href="../reference/ShmError.html#pymizu.ShmError" class="doc-class doc-label doc-label-exception">ShmError</a></dt>
 <dd>
-<p>A shared-memory region operation failed. Also an OSError: the failure is at the OS layer.</p>
+<p>A shared-memory region operation failed. Also an OSError: the failure is at the OS layer. Carries a ‘bytes’ attribute: the requested size of a region that was not created, None when a region was not opened.</p>
 </dd>
 <dt><a href="../reference/StartupError.html#pymizu.StartupError" class="doc-class doc-label doc-label-class">StartupError</a></dt>
 <dd>
@@ -1148,7 +1158,7 @@ ul.task-list li input[type="checkbox"] {
 </dd>
 <dt><a href="../reference/TaskError.html#pymizu.TaskError" class="doc-class doc-label doc-label-class">TaskError</a></dt>
 <dd>
-<p>The task callable raised. Carries ‘remote_type’ and ‘remote_traceback’ attributes describing the worker-side exception.</p>
+<p>The task callable raised. Carries ‘remote_type’ and ‘detail’ attributes describing the worker-side exception.</p>
 </dd>
 <dt><a href="../reference/WorkerDiedError.html#pymizu.WorkerDiedError" class="doc-class doc-label doc-label-class">WorkerDiedError</a></dt>
 <dd>
@@ -1160,7 +1170,11 @@ ul.task-list li input[type="checkbox"] {
 </dd>
 <dt><a href="../reference/DeclinedError.html#pymizu.DeclinedError" class="doc-class doc-label doc-label-exception">DeclinedError</a></dt>
 <dd>
-<p>A send on a foreign-language channel of a value outside the portable interchange subset. Carries ‘path’ and ‘reason’ attributes.</p>
+<p>A send on a foreign-language channel of a value outside the portable interchange subset. Carries ‘path’ and ‘reason’ attributes (‘reason’ includes the one-line rewrite guidance for the value).</p>
+</dd>
+<dt><a href="../reference/ForeignPayloadError.html#pymizu.ForeignPayloadError" class="doc-class doc-label doc-label-class">ForeignPayloadError</a></dt>
+<dd>
+<p>A received payload in a language-private or unrecognized format: a peer sent outside the portable interchange subset. The message is consumed, never wedging the ring; the async drain rejects only the head waiter and continues.</p>
 </dd>
 <dt><a href="../reference/ConcurrentUseError.html#pymizu.ConcurrentUseError" class="doc-class doc-label doc-label-class">ConcurrentUseError</a></dt>
 <dd>
@@ -1197,10 +1211,6 @@ ul.task-list li input[type="checkbox"] {
 <dt><a href="../reference/prune.html#pymizu.prune" class="doc-function doc-label doc-label-function">prune()</a></dt>
 <dd>
 <p>Remove orphaned shared memory regions.</p>
-</dd>
-<dt><a href="../reference/abi_version.html#pymizu.abi_version" class="doc-function doc-label doc-label-function">abi_version()</a></dt>
-<dd>
-<p>abi_version() -&gt; int</p>
 </dd>
 </dl>
 

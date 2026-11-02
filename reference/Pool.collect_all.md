@@ -4,7 +4,7 @@ Wait until every task is terminal.
 
 Usage
 
-[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L916-L946)
+[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L976-L1006)
 
 ``` python
 Pool.collect_all(

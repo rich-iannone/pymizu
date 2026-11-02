@@ -58,7 +58,7 @@
 - [Pool.spawn_workers](https://shikokuchuo.net/pymizu/reference/Pool.spawn_workers.html)
 - [Pool.stop](https://shikokuchuo.net/pymizu/reference/Pool.stop.html)
 - [Pool.destroy](https://shikokuchuo.net/pymizu/reference/Pool.destroy.html)
-- [Pool.status](https://shikokuchuo.net/pymizu/reference/Pool.status.html)
+- [Pool.info](https://shikokuchuo.net/pymizu/reference/Pool.info.html)
 - [Pool.dump](https://shikokuchuo.net/pymizu/reference/Pool.dump.html)
 - [Pool.stats](https://shikokuchuo.net/pymizu/reference/Pool.stats.html)
 - [Pool.trace](https://shikokuchuo.net/pymizu/reference/Pool.trace.html)
@@ -79,6 +79,7 @@
 > R peers and workers (the mizu R package), neutral task specifications, and the data.frame's Python home.
 
 - [call](https://shikokuchuo.net/pymizu/reference/call.html): A task specification for a pool of another language's workers
+- [launcher](https://shikokuchuo.net/pymizu/reference/launcher.html): Return a launcher spawning Python processes running pymizu
 - [r_launcher](https://shikokuchuo.net/pymizu/reference/r_launcher.html): Return a launcher spawning R processes running the `mizu` package
 - [Frame](https://shikokuchuo.net/pymizu/reference/Frame.html): A data.frame's Python home: named columns with a row count
 - [DimArray](https://shikokuchuo.net/pymizu/reference/DimArray.html): An `ndarray` carrying R labels (`names` / `dimnames` /
@@ -101,16 +102,17 @@
 - [is_sentinel](https://shikokuchuo.net/pymizu/reference/is_sentinel.html): is_sentinel(x) -> bool
 - [is_remote_error](https://shikokuchuo.net/pymizu/reference/is_remote_error.html): Test whether a received channel value is a remote error
 - [MizuError](https://shikokuchuo.net/pymizu/reference/MizuError.html): Base class for all pymizu errors
-- [ShmError](https://shikokuchuo.net/pymizu/reference/ShmError.html): A shared-memory region operation failed. Also an OSError: the failure is at the OS layer
+- [ShmError](https://shikokuchuo.net/pymizu/reference/ShmError.html): A shared-memory region operation failed. Also an OSError: the failure is at the OS layer. Carries a 'bytes' attribute: the requested size of a region that was not created, None when a region was not opened
 - [StartupError](https://shikokuchuo.net/pymizu/reference/StartupError.html): A channel peer or pool worker failed to attach within the startup timeout
 - [SubmitTimeoutError](https://shikokuchuo.net/pymizu/reference/SubmitTimeoutError.html): Pool.submit() timed out waiting for injection-ring space. Also a TimeoutError
 - [SlotsExhaustedError](https://shikokuchuo.net/pymizu/reference/SlotsExhaustedError.html): Pool.submit() found no free result slot: too many outstanding (uncollected) tasks
 - [StoppedError](https://shikokuchuo.net/pymizu/reference/StoppedError.html): The pool is stopped; no further submission is possible
 - [CancelledError](https://shikokuchuo.net/pymizu/reference/CancelledError.html): The task was cancelled before it ran
-- [TaskError](https://shikokuchuo.net/pymizu/reference/TaskError.html): The task callable raised. Carries 'remote_type' and 'remote_traceback' attributes describing the worker-side exception
+- [TaskError](https://shikokuchuo.net/pymizu/reference/TaskError.html): The task callable raised. Carries 'remote_type' and 'detail' attributes describing the worker-side exception
 - [WorkerDiedError](https://shikokuchuo.net/pymizu/reference/WorkerDiedError.html): The executing worker died mid-task. Carries 'slot' and 'pid' attributes identifying the worker
 - [TaskLostError](https://shikokuchuo.net/pymizu/reference/TaskLostError.html): The claimant's read of the task's payload region failed without a death verdict — a vanished or unreadable region, not a dead worker
-- [DeclinedError](https://shikokuchuo.net/pymizu/reference/DeclinedError.html): A send on a foreign-language channel of a value outside the portable interchange subset. Carries 'path' and 'reason' attributes
+- [DeclinedError](https://shikokuchuo.net/pymizu/reference/DeclinedError.html): A send on a foreign-language channel of a value outside the portable interchange subset. Carries 'path' and 'reason' attributes ('reason' includes the one-line rewrite guidance for the value)
+- [ForeignPayloadError](https://shikokuchuo.net/pymizu/reference/ForeignPayloadError.html): A received payload in a language-private or unrecognized format: a peer sent outside the portable interchange subset. The message is consumed, never wedging the ring; the async drain rejects only the head waiter and continues
 - [ConcurrentUseError](https://shikokuchuo.net/pymizu/reference/ConcurrentUseError.html): A verb ran concurrently with another verb in the same handle role: each handle role is confined to one thread at a time (libmizu 'Handle threading')
 
 #### Housekeeping
@@ -122,4 +124,3 @@
 - [current_pool](https://shikokuchuo.net/pymizu/reference/current_pool.html): The pool handle of the worker running the task
 - [current_rng](https://shikokuchuo.net/pymizu/reference/current_rng.html): The current element's own numpy Generator, inside a seeded map
 - [prune](https://shikokuchuo.net/pymizu/reference/prune.html): Remove orphaned shared memory regions
-- [abi_version](https://shikokuchuo.net/pymizu/reference/abi_version.html): abi_version() -> int
