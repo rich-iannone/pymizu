@@ -106,6 +106,23 @@ def test_channel_attach_peer():
         ch.close()
 
 
+def test_launcher_factory(tmp_path):
+    # the public factory is the documented default of every launcher=
+    # argument: an explicit interpreter is accepted, and stdout/stderr
+    # ride through to Popen
+    err = tmp_path / "peer.err"
+    with open(err, "w") as f:
+        ch = pymizu.Channel.create(
+            "import sys\nsys.stderr.write('peer\\n')\nch.send(1)\n",
+            launcher=pymizu.launcher(python=sys.executable, stderr=f),
+        )
+    try:
+        assert ch.recv(timeout=10) == 1
+    finally:
+        ch.close()
+    assert err.read_text() == "peer\n"
+
+
 def test_channel_token_alive_info():
     ch = pymizu.Channel.create(ECHO_PEER)
     try:

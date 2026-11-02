@@ -85,15 +85,65 @@ def _token_of(token: str) -> str:
     return m.group()
 
 
-def _default_launcher() -> _Callable[[str], _subprocess.Popen]:
-    """Spawn the channel peer as ``python -m pymizu.child <token>``."""
+def launcher(
+    *,
+    python: str | None = None,
+    stdout: _Any = None,
+    stderr: _Any = None,
+) -> _Callable[..., _subprocess.Popen]:
+    """Return a launcher spawning Python processes running pymizu.
 
-    def launch(token: str) -> _subprocess.Popen:
-        return _subprocess.Popen(
-            [_sys.executable, "-m", "pymizu.child", token]
+    [`Channel.create()`](`pymizu.Channel.create`) calls it with `token`
+    alone to spawn the peer; [`Pool.create()`](`pymizu.Pool.create`)
+    calls it with `token` and `slot` to spawn each worker. The process
+    runs ``python -m pymizu.child <token>`` or
+    ``python -m pymizu.worker <token> <slot>``. This is the default of
+    every ``launcher=`` argument; the mirror of the R package's
+    ``mizu_launcher()``.
+
+    Parameters
+    ----------
+    python
+        Path to the Python interpreter; the default is
+        `sys.executable`.
+    stdout
+        Forwarded to `subprocess.Popen`; the default inherits the
+        console, where the peer's error messages land.
+    stderr
+        Forwarded to `subprocess.Popen`.
+
+    Returns
+    -------
+        A `callable(token, slot=None)` launcher for
+        [`Channel.create()`](`pymizu.Channel.create`) and
+        [`Pool.create()`](`pymizu.Pool.create`).
+
+    Examples
+    --------
+    ```python
+    import pymizu
+
+    with pymizu.Pool.create(
+        4, launcher=pymizu.launcher(stderr="worker.log")
+    ) as pool:
+        print(pool.submit(abs, -1).collect())
+    ```
+    """
+    py = python or _sys.executable
+
+    def launch(token: str, slot: int | None = None) -> _subprocess.Popen:
+        args = (
+            [py, "-m", "pymizu.child", token]
+            if slot is None
+            else [py, "-m", "pymizu.worker", token, str(slot)]
         )
+        return _subprocess.Popen(args, stdout=stdout, stderr=stderr)
 
     return launch
+
+
+# the internal name under the launcher= parameters' own shadowing
+_default_launcher = launcher
 
 
 class Channel:
@@ -165,10 +215,10 @@ class Channel:
             Seconds to wait for the peer to attach.
         launcher
             A ``callable(token)`` arranging for a Python process to run
-            ``python -m pymizu.child <token>``; the default spawns
-            ``sys.executable`` directly.
-            [`r_launcher()`](`pymizu.r_launcher`) returns one spawning
-            an R peer (the R package ``mizu``).
+            ``python -m pymizu.child <token>``; the default is
+            [`launcher()`](`pymizu.launcher`) (spawns `sys.executable`
+            directly). [`r_launcher()`](`pymizu.r_launcher`) returns
+            one spawning an R peer (the R package ``mizu``).
 
         Returns
         -------
@@ -448,17 +498,6 @@ class Channel:
             yield x
 
 
-def _default_worker_launcher() -> _Callable[[str, int], _subprocess.Popen]:
-    """Spawn one pool worker as ``python -m pymizu.worker <token> <slot>``."""
-
-    def launch(token: str, slot: int) -> _subprocess.Popen:
-        return _subprocess.Popen(
-            [_sys.executable, "-m", "pymizu.worker", token, str(slot)]
-        )
-
-    return launch
-
-
 def _launch_workers(
     h: _pymizu._Pool,
     launcher: _Callable[[str, int], _Any],
@@ -717,7 +756,8 @@ class Pool:
         launcher
             A ``callable(token, slot)`` arranging for a Python process
             to run ``python -m pymizu.worker <token> <slot>``; the
-            default spawns ``sys.executable`` directly.
+            default is [`launcher()`](`pymizu.launcher`) (spawns
+            `sys.executable` directly).
 
         Returns
         -------
@@ -750,7 +790,7 @@ class Pool:
         try:
             _launch_workers(
                 h,
-                launcher or _default_worker_launcher(),
+                launcher or _default_launcher(),
                 slots,
                 startup_timeout,
             )
@@ -1343,7 +1383,7 @@ class Pool:
             Seconds to wait for the workers to attach.
         launcher
             As for [`Pool.create()`](`pymizu.Pool.create`); the default
-            spawns ``sys.executable`` directly.
+            is [`launcher()`](`pymizu.launcher`).
 
         Returns
         -------
@@ -1365,7 +1405,7 @@ class Pool:
         slots = free[:n]
         _launch_workers(
             self._h,
-            launcher or _default_worker_launcher(),
+            launcher or _default_launcher(),
             slots,
             startup_timeout,
         )
@@ -1691,6 +1731,7 @@ __all__ = [
     "default_pool",
     "is_remote_error",
     "is_sentinel",
+    "launcher",
     "prune",
     "r_launcher",
     "set_default_pool",

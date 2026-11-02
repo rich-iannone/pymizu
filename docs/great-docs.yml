@@ -66,6 +66,7 @@ reference:
         specifications, and the data.frame's Python home.
       contents:
         - call
+        - launcher
         - r_launcher
         - Frame
         - DimArray

@@ -1170,7 +1170,7 @@ def test_worker_base_exception_task_exits_1():
     procs = []
 
     def launcher(token, slot):
-        procs.append(pymizu._default_worker_launcher()(token, slot))
+        procs.append(pymizu.launcher()(token, slot))
         return procs[-1]
 
     p = pymizu.Pool.create(1, launcher=launcher)
@@ -1188,7 +1188,7 @@ def test_worker_keyboard_interrupt_task_exits_2():
     procs = []
 
     def launcher(token, slot):
-        procs.append(pymizu._default_worker_launcher()(token, slot))
+        procs.append(pymizu.launcher()(token, slot))
         return procs[-1]
 
     p = pymizu.Pool.create(1, launcher=launcher)
@@ -1208,7 +1208,7 @@ def test_retired_worker_lingers_for_uncollected_result():
     procs = []
 
     def launcher(token, slot):
-        procs.append(pymizu._default_worker_launcher()(token, slot))
+        procs.append(pymizu.launcher()(token, slot))
         return procs[-1]
 
     p = pymizu.Pool.create(1, launcher=launcher)

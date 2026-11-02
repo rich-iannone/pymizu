@@ -125,7 +125,7 @@ def test_pool_word_zero_and_attach_race():
         # an attached submitter reads the same word (none yet)
         att = pymizu.Pool._wrap(_pymizu._pool_attach(h.token))
         assert att._h._worker_ident() is None
-        pymizu._default_worker_launcher()(h.token, 0)
+        pymizu.launcher()(h.token, 0)
         # the queued private frame runs once a worker exists, and both
         # submitters read the word without re-attaching
         assert t.collect(timeout=10) == 1
@@ -425,7 +425,7 @@ def test_spec_rewrite_when_no_candidate_fits():
     import numpy as np
 
     h = _pymizu._pool_new(1, 8, 64, 64, 64, 512)
-    pymizu._default_worker_launcher()(h.token, 0)
+    pymizu.launcher()(h.token, 0)
     try:
         pool = pymizu.Pool._wrap(h)
         assert pool.submit(abs, -1).collect(timeout=10) == 1  # the join
@@ -551,7 +551,7 @@ def test_spec_view_arg_pinned_on_the_rewrite():
     p1.send(np.arange(70_000, dtype=np.float64) * 3)
     v = h1.recv(10)
     h = _pymizu._pool_new(1, 8, 64, 64, 64, 512)
-    pymizu._default_worker_launcher()(h.token, 0)
+    pymizu.launcher()(h.token, 0)
     try:
         pool = pymizu.Pool._wrap(h)
         assert pool.submit(abs, -1).collect(timeout=10) == 1  # the join
@@ -587,7 +587,7 @@ def test_spec_zc_checkout_failure_abandons_to_value():
         return n
 
     h = _pymizu._pool_new(1, 8, 64, 64, 64, 512)
-    pymizu._default_worker_launcher()(h.token, 0)
+    pymizu.launcher()(h.token, 0)
     try:
         pool = pymizu.Pool._wrap(h)
         assert pool.submit(abs, -1).collect(timeout=10) == 1  # the join
