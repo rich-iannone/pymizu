@@ -607,7 +607,7 @@ tools/vendor-libmizu.sh` for a local checkout).
 --check` + pyrefly, with numpy/cloudpickle/pyarrow/polars installed so
 the optional paths typecheck), an sdist leg (the sdist must carry the
 vendored C core and build standalone), and a build matrix — ubuntu
-3.10/3.13/3.14, macos 3.11/3.14, windows 3.12/3.14 — that installs, runs
+3.10/3.11/3.14/3.15, macos 3.12/3.15, windows 3.13/3.15 — that installs, runs
 an import smoke, and measures coverage (codecov upload from ubuntu
 only). All checkouts use `fetch-depth: 0` so setuptools_scm sees the
 tags. Windows legs add
@@ -621,5 +621,27 @@ runs `great-docs build`, and publishes `docs/_site` to
 GitHub Pages via the gh-pages branch (Pages must be enabled on the repo;
 the custom domain lives in the repo's Pages settings, canonical URLs come
 from `site_url` + `seo.canonical.base_url` in `docs/great-docs.yml`).
+
+`.github/workflows/publish.yml`: the release build. A `v*` tag push
+builds the sdist (twine-checked) and the wheels, then uploads them to
+PyPI through trusted publishing (the `pypi` environment, `id-token:
+write`, no stored token; the publisher must be registered on PyPI for
+this workflow and environment before the first tag). `workflow_dispatch`
+builds the same matrix and skips the upload, for validating before
+tagging. The wheel selection lives in pyproject.toml's
+`[tool.cibuildwheel]`: cp310 through cp315, GIL builds only, on
+manylinux x86_64/aarch64, macOS arm64/x86_64 and Windows amd64
+(musllinux, i686, win32, PyPy and free-threaded are out). Every wheel
+runs `tools/smoke_wheel.py` from a temporary directory, so the import
+and a pool round trip come from the installed wheel alone. The Windows
+clang-cl PATH entry goes through cibuildwheel's `environment`, which
+evaluates the value as double-quoted bash: the backslashes are doubled
+or they are stripped. The default Linux image is manylinux_2_28, whose
+glibc 2.28 headers predate `MADV_POPULATE_WRITE` (2.35) and
+`MADV_COLLAPSE` (2.37); the core fallback-defines only `MADV_COLLAPSE`,
+and only in shm.c, so until it carries numeric fallbacks for both in
+internal.h the Linux wheels compile the two-pass fallocate reservation
+and none of the collapse paths that a source build on a current distro
+gets.
 
 License: MIT.

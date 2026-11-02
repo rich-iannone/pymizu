@@ -2,6 +2,7 @@ __pycache__/
 *.py[co]
 build/
 dist/
+wheelhouse/
 *.egg-info/
 *.so
 *.pyd

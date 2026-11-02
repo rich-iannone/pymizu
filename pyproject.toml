@@ -83,6 +83,22 @@ pymizu = ["py.typed", "*.pyi"]
 
 [tool.setuptools_scm]
 
+# Release wheels (publish.yml). GIL builds only: free-threaded (cp314t+)
+# is out of scope (the GIL policy assumes a GIL), as are PyPy (raw CPython
+# C API), 32-bit (64-bit platforms only), and musllinux (untested libc;
+# the kernel >= 5.3 requirement narrows its audience anyway).
+[tool.cibuildwheel]
+build = "cp310-* cp311-* cp312-* cp313-* cp314-* cp315-*"
+skip = ["*-win32", "*-manylinux_i686", "*-musllinux*"]
+test-command = "python {project}/tools/smoke_wheel.py"
+
+[tool.cibuildwheel.windows]
+# setup.py forces clang-cl (MSVC C11 atomics unsupported); LLVM is
+# preinstalled on the runners but not on PATH. cibuildwheel evaluates
+# the value as a double-quoted bash string, so the backslashes are
+# doubled (a single backslash is stripped: C:Program FilesLLVMbin).
+environment = { PATH = 'C:\\Program Files\\LLVM\\bin;$PATH' }
+
 [tool.ruff]
 target-version = "py310"
 line-length = 79
