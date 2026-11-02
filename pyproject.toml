@@ -44,7 +44,7 @@ cloudpickle = ["cloudpickle"]
 # Keep the ruff pin in sync with the ruff-pre-commit rev in
 # .pre-commit-config.yaml — bump both together.
 dev = [
-  "pytest",
+  "pytest>=8",
   "coverage",
   "ruff==0.14.0",
   "pyrefly",
