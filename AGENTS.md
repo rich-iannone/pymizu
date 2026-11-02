@@ -564,9 +564,10 @@ tools/vendor-libmizu.sh` for a local checkout).
   `_exec_fail(1|2)` arm on the worker handle forcing the decode-failure /
   vanished-payload (LOST publish) branch (`tests/test_pool.py`
   `test_task_lost`).
-- pytest is configured in `pyproject.toml` (`testpaths = ["tests"]`,
-  `addopts = "-ra --durations 10 --strict-markers"`; no custom markers
-  exist to declare). Coverage excludes `if TYPE_CHECKING:` blocks.
+- pytest is configured in `pyproject.toml` (`minversion = "8.0"`,
+  `testpaths = ["tests"]`, `addopts` of `-ra --durations=10
+  --strict-markers --strict-config`, `xfail_strict = true`). Coverage
+  excludes `if TYPE_CHECKING:` blocks.
 - Coverage: `coverage run -m pytest tests/`; `conftest.py` arms the
   spawned child/worker interpreters via `COVERAGE_PROCESS_START` so they
   measure themselves too.
