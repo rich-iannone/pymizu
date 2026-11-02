@@ -638,10 +638,9 @@ clang-cl PATH entry goes through cibuildwheel's `environment`, which
 evaluates the value as double-quoted bash: the backslashes are doubled
 or they are stripped. The default Linux image is manylinux_2_28, whose
 glibc 2.28 headers predate `MADV_POPULATE_WRITE` (2.35) and
-`MADV_COLLAPSE` (2.37); the core fallback-defines only `MADV_COLLAPSE`,
-and only in shm.c, so until it carries numeric fallbacks for both in
-internal.h the Linux wheels compile the two-pass fallocate reservation
-and none of the collapse paths that a source build on a current distro
-gets.
+`MADV_COLLAPSE` (2.37); the core fallback-defines both in internal.h
+(fixed kernel ABI codes, support probed at run time), so the wheels
+compile the same Linux reservation and huge-folio paths as a source
+build on a current distro.
 
 License: MIT.
