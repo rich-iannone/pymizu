@@ -14,7 +14,7 @@ result
 
     65536
 
-`pool.submit()` returns a [Task](../reference/Task.md#pymizu.Task) handle immediately. `task.collect()` waits for the result. The pool is a context manager: leaving the block stops it. `pool.stop()` cancels the pending tasks, waits for the workers to exit cleanly, and releases the shared memory. The pool's lifetime is bound to the creating process: dropping the handle shuts the pool down without the wait.
+`pool.submit()` returns a [Task](../reference/Task.md#pymizu.Task) handle immediately. `task.collect()` waits for the result. The pool is a context manager: leaving the block stops it. `pool.stop()` cancels the pending tasks, waits for the workers to exit cleanly, and releases the shared memory. The pool exists only as long as the process that created it, and dropping the handle shuts the pool down without waiting for the workers.
 
 ## Task callables
 
@@ -22,7 +22,7 @@ A task callable travels by pickle. With the standard pickle it must be an import
 
 ## Frames as task arguments
 
-A [`Frame`](../reference/Frame.md#pymizu.Frame) argument follows the same rule. Past the size floor it crosses as one shared-memory region, and the worker's callable reads it in place, exactly as on a channel. Below the floor the argument pickles (the worker gets a copy), as it does with a complex column (which has no Arrow type). One region crosses per task: a second region-sized argument, another frame or a large buffer, moves the whole task to pickle, values exact. Raw pyarrow and polars frames stay on the pickle path (they round-trip with their exact types). Construct the [Frame](../reference/Frame.md#pymizu.Frame) first to opt in.
+A [`Frame`](../reference/Frame.md#pymizu.Frame) argument follows the same rule. Past the size floor it crosses as one shared-memory region, and the worker's callable reads it in place, as on a channel. Below the floor the argument pickles (the worker gets a copy), as it does with a complex column (which has no Arrow type). One region crosses per task. A second region-sized argument (another frame or a large buffer) moves the whole task to pickle, with values exact. Raw pyarrow and polars frames stay on the pickle path (they round-trip with their exact types). Construct the [Frame](../reference/Frame.md#pymizu.Frame) first to opt in.
 
 ## Outcomes
 
@@ -31,10 +31,10 @@ A [`Frame`](../reference/Frame.md#pymizu.Frame) argument follows the same rule. 
 | The task raised | [pymizu.TaskError](../reference/TaskError.md#pymizu.TaskError), with `remote_type` and `detail` |
 | The task was cancelled before it ran | [pymizu.CancelledError](../reference/CancelledError.md#pymizu.CancelledError) |
 | The executing worker died | [pymizu.WorkerDiedError](../reference/WorkerDiedError.md#pymizu.WorkerDiedError), with `slot` and `pid` |
-| The task's payload region vanished without a death verdict | [pymizu.TaskLostError](../reference/TaskLostError.md#pymizu.TaskLostError) |
+| The task's payload region vanished before any worker ran it | [pymizu.TaskLostError](../reference/TaskLostError.md#pymizu.TaskLostError) |
 | The collect timeout expired | the `pymizu.TIMEOUT` sentinel |
 
-A task error crosses as a plain description of type, message, and traceback, never a pickled exception object. The OS reports a worker's death immediately -- no heartbeats, no polling. A dead worker fails exactly the tasks it had claimed. The surviving workers take over the rest of its queue.
+A task error crosses as a plain description of type, message, and traceback, not a pickled exception object. The OS reports a worker's death immediately, with no heartbeats and no polling. Only the tasks the dead worker had claimed fail. The surviving workers take over the rest of its queue.
 
 `task.cancel()` withdraws a task. A task still queued is skipped. A task already running completes, and its result is discarded. Cancellation never interrupts executing code.
 
@@ -70,9 +70,9 @@ rest
 
 ## asyncio
 
-`await task` -- or `task.collect_async()` -- is the event-driven collect: an `asyncio.Future` resolving with the task's result (or raising the task's error), resolved when the result arrives -- no blocking, no polling. Cancelling the Future detaches the waiter -- a later blocking `collect()` works again -- and never cancels the task (`task.cancel()` stays the explicit verb). A task with a pending async collect refuses blocking collects: one consumer per result.
+`await task`, or `task.collect_async()`, is the event-driven collect. It returns an `asyncio.Future` that resolves with the task's result (or raises the task's error) when the result arrives, with no blocking and no polling. Cancelling the Future detaches the waiter, so a later blocking `collect()` works again, and never cancels the task (only `task.cancel()` does). A task with a pending async collect refuses blocking collects: each result has one consumer.
 
-`pool.collect_any_async(tasks)` and `pool.collect_all_async(tasks)` are the batch form: exactly one Future per collection, never one per task, re-checked whenever a task finishes. They behave like the sync verbs: collect-all resolves in input order and the first error by position rejects with `index`; collect-any resolves `(index, value)` for the first task to finish. There are no timeout arguments: use `asyncio.timeout` or `asyncio.wait_for`.
+`pool.collect_any_async(tasks)` and `pool.collect_all_async(tasks)` are the batch forms, with one Future per collection rather than one per task, re-checked whenever a task finishes. They behave like the sync verbs. Collect-all resolves in input order, and the first error by position rejects with `index`. Collect-any resolves `(index, value)` for the first task to finish. There are no timeout arguments: use `asyncio.timeout` or `asyncio.wait_for`.
 
 ``` python
 with pymizu.Pool.create(2) as pool:
@@ -88,7 +88,7 @@ rest
 
 ## Nested tasks
 
-Inside a task, [pymizu.current_pool()](../reference/current_pool.md#pymizu.current_pool) returns the pool handle of the worker running the task. A nested submit goes straight onto that worker's own queue -- no ring, no wake-up. A worker waiting on a nested result runs other work instead of sleeping. Recursive fan-out is cheap and never deadlocks the pool:
+Inside a task, [pymizu.current_pool()](../reference/current_pool.md#pymizu.current_pool) returns the pool handle of the worker running the task. A nested submit goes onto that worker's own queue, so there is no ring and no wake-up. A worker waiting on a nested result runs other work instead of sleeping. Recursive fan-out is cheap and cannot deadlock the pool:
 
 ``` python
 def fan_out(parts):
@@ -112,9 +112,9 @@ total
 
 ## A default pool for package code
 
-Package code can read a process-wide default pool with [pymizu.default_pool()](../reference/default_pool.md#pymizu.default_pool). `pymizu.set_default_pool(pool)` sets it (`None` clears it) and returns the previous default, so callers can save and restore. The default keeps the pool alive: a pool set as the default survives even after its variable is deleted. `pymizu.using_pool(pool)` scopes the default to a `with` block and restores the previous default on exit, including on exception.
+Package code can read a process-wide default pool with [pymizu.default_pool()](../reference/default_pool.md#pymizu.default_pool). `pymizu.set_default_pool(pool)` sets it (`None` clears it) and returns the previous default, so callers can save and restore. A pool set as the default stays alive even after its variable is deleted. `pymizu.using_pool(pool)` scopes the default to a `with` block and restores the previous default on exit, including on exception.
 
-Resolve an optional pool in this order: an explicit [pool](../reference/Task.pool.md#pymizu.Task.pool) argument, [current_pool()](../reference/current_pool.md#pymizu.current_pool) inside a task, [default_pool()](../reference/default_pool.md#pymizu.default_pool), then your own fallback (sequential execution or an error). The default never overrides [current_pool()](../reference/current_pool.md#pymizu.current_pool): inside a task the worker's own handle wins, so nested submission is never shadowed. Setting a default checks the type only. A stopped pool is accepted and fails at use time. Handles from [Pool.attach()](../reference/Pool.attach.md#pymizu.Pool.attach) are valid defaults.
+Resolve an optional pool in this order: an explicit [pool](../reference/Task.pool.md#pymizu.Task.pool) argument, [current_pool()](../reference/current_pool.md#pymizu.current_pool) inside a task, [default_pool()](../reference/default_pool.md#pymizu.default_pool), then your own fallback (sequential execution or an error). Inside a task, [current_pool()](../reference/current_pool.md#pymizu.current_pool) takes precedence over the default, so nested submission always goes to the worker's own pool. Setting a default checks only the type: a stopped pool is accepted and fails when used. Handles from [Pool.attach()](../reference/Pool.attach.md#pymizu.Pool.attach) are valid defaults.
 
 ``` python
 def run(x, pool=None):
@@ -146,25 +146,25 @@ Four read-only tools watch a running pool without disturbing it:
 ``` python
 pool.info()   # snapshot: worker states, queued tasks, result slots
 pool.stats()    # cumulative counters since each participant joined
-pool.dump()     # every slot in full detail -- the first tool when a pool hangs
+pool.dump()     # every slot in full detail; start here when a pool hangs
 pool.trace(fn)  # fn(event, id) at each task lifecycle event; None removes it
 ```
 
 ## Threading
 
-A pool handle is single-producer: call its submit family -- `submit()`, [submit_batch()](../reference/Pool.submit_batch.md#pymizu.Pool.submit_batch), [map()](../reference/Pool.map.md#pymizu.Pool.map) -- from one thread only. A second concurrent producer raises [ConcurrentUseError](../reference/ConcurrentUseError.md#pymizu.ConcurrentUseError) instead of corrupting the submission queue; the guard is a check, not a lock -- it never waits, it reports the mistake. The waiting half (the blocking collects, `ready_wait()`, [stop()](../reference/Pool.stop.md#pymizu.Pool.stop)) likewise belongs to one thread -- a concurrent second wait raises the same error -- and it may be a different thread from the producer's. This is libmizu's threading contract: the shared structures carry no locks by design.
+A pool handle is single-producer: call its submit family (`submit()`, [submit_batch()](../reference/Pool.submit_batch.md#pymizu.Pool.submit_batch), [map()](../reference/Pool.map.md#pymizu.Pool.map)) from one thread only. A second concurrent producer raises [ConcurrentUseError](../reference/ConcurrentUseError.md#pymizu.ConcurrentUseError) instead of corrupting the submission queue. The guard is a check, not a lock: it never waits, and it reports the mistake. The waiting half (the blocking collects, `ready_wait()`, [stop()](../reference/Pool.stop.md#pymizu.Pool.stop)) likewise belongs to one thread, which may be a different thread from the producer's, and a concurrent second wait raises the same error. This is libmizu's threading contract: the shared structures carry no locks by design.
 
 Three ways to produce from several threads, in rough order of preference:
 
-1.  [PoolExecutor](../reference/PoolExecutor.md#pymizu.PoolExecutor) -- its `submit()` is thread-safe by internal lock, and it resolves futures as results arrive (see the next section).
-2.  Funnel submissions through one thread -- for example `run_in_executor` with a single-worker `ThreadPoolExecutor` -- while collects stay on their own thread.
+1.  [PoolExecutor](../reference/PoolExecutor.md#pymizu.PoolExecutor): its `submit()` is thread-safe through an internal lock, and it resolves futures as results arrive (see the next section).
+2.  Funnel submissions through one thread, for example `run_in_executor` with a single-worker `ThreadPoolExecutor`, while collects stay on their own thread.
 3.  `Pool.attach(token)` one handle per thread: each attached handle is its own producer with its own submission queue.
 
-The trap to avoid is `asyncio.to_thread(pool.submit, ...)` from concurrent coroutines: the default executor is multi-threaded, so the submits race and raise [ConcurrentUseError](../reference/ConcurrentUseError.md#pymizu.ConcurrentUseError). `destroy()` is the one any-thread verb, as with channels.
+Avoid `asyncio.to_thread(pool.submit, ...)` from concurrent coroutines: the default executor is multi-threaded, so the submits race and raise [ConcurrentUseError](../reference/ConcurrentUseError.md#pymizu.ConcurrentUseError). `destroy()` is the one verb that is safe from any thread, as with channels.
 
 ## concurrent.futures interop
 
-[pymizu.PoolExecutor](../reference/PoolExecutor.md#pymizu.PoolExecutor) adapts a pool to the stdlib `concurrent.futures.Executor` interface. Code written against `ProcessPoolExecutor` drops in: `submit` returns real `concurrent.futures.Future` objects. `wait`, `as_completed`, `asyncio.wrap_future`, and the base `Executor.map` all work unchanged. Futures resolve as results arrive -- no background thread, no polling.
+[pymizu.PoolExecutor](../reference/PoolExecutor.md#pymizu.PoolExecutor) adapts a pool to the stdlib `concurrent.futures.Executor` interface. Code written against `ProcessPoolExecutor` drops in: `submit` returns real `concurrent.futures.Future` objects. `wait`, `as_completed`, `asyncio.wrap_future`, and the base `Executor.map` all work unchanged. Futures resolve as results arrive, with no background thread and no polling.
 
 ``` python
 with pymizu.PoolExecutor.create(4) as ex:

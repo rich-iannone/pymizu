@@ -8,7 +8,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Register a hook called as fn(event, id) at each task">
+<meta name="description" content="Register a hook called as fn(event, id) at each task event.">
 
 <title>Pool.trace() | pymizu</title>
 <script type="application/ld+json">[{"@context": "https://schema.org", "@type": "SoftwareSourceCode", "name": "pymizu", "description": "Async and parallel Python at thread speed over shared memory", "codeRepository": "https://github.com/shikokuchuo/pymizu", "license": "https://opensource.org/licenses/MIT", "url": "https://shikokuchuo.net/pymizu", "documentation": "https://shikokuchuo.net/pymizu", "programmingLanguage": {"@type": "ComputerLanguage", "name": "Python"}}, {"@context": "https://schema.org", "@type": "WebPage", "name": "Pool.trace - pymizu", "isPartOf": {"@type": "WebSite", "name": "pymizu"}, "url": "https://shikokuchuo.net/pymizu/reference/Pool.trace.html"}]</script>
@@ -134,11 +134,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <meta property="og:title" content="Pool.trace() | pymizu">
-<meta property="og:description" content="Register a hook called as fn(event, id) at each task">
+<meta property="og:description" content="Register a hook called as fn(event, id) at each task event.">
 <meta property="og:image" content="https://shikokuchuo.net/pymizu/assets/og-image.png">
 <meta property="og:site_name" content="pymizu">
 <meta name="twitter:title" content="Pool.trace() | pymizu">
-<meta name="twitter:description" content="Register a hook called as fn(event, id) at each task">
+<meta name="twitter:description" content="Register a hook called as fn(event, id) at each task event.">
 <meta name="twitter:image" content="https://shikokuchuo.net/pymizu/assets/og-image.png">
 <meta name="twitter:card" content="summary_large_image">
 </head>
@@ -806,17 +806,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <div class="doc-subject">
-<p>Register a hook called as <code>fn(event, id)</code> at each task</p>
+<p>Register a hook called as <code>fn(event, id)</code> at each task event.</p>
 </div>
 <div class="doc-usage-source">
 <p>Usage</p>
-<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L1480-L1489" target="_blank" rel="noopener">Source</a></p>
+<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L1470-L1481" target="_blank" rel="noopener">Source</a></p>
 </div>
 <div class="doc-signature doc-function">
 <div class="sourceCode" id="cb1"><pre class="sourceCode pythonsignature"><code class="sourceCode pythonsignature"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dt">Pool</span><span class="op">.</span><span class="fu">trace</span>(<span class="va">fn</span>)</span></code></pre></div>
 </div>
 <div class="doc-text">
-<p>event this process observes: <code>"submit"</code> on the submitting thread; <code>"start"</code>, <code>"done"</code>, <code>"error"</code>, <code>"drop"</code>, <code>"rehome"</code> on worker handles. <code>id</code> is <code>"&lt;submitter slot&gt;:&lt;counter&gt;"</code>, stable across processes. Registration is per-handle and per-process; <code>None</code> removes the hook. An exception in the hook is reported as unraisable, never raised into the pool.</p>
+<p>The events this process observes are <code>"submit"</code> on the submitting thread, and <code>"start"</code>, <code>"done"</code>, <code>"error"</code>, <code>"drop"</code>, and <code>"rehome"</code> on worker handles. <code>id</code> is <code>"&lt;submitter slot&gt;:&lt;counter&gt;"</code>, stable across processes. Registration is per-handle and per-process; <code>None</code> removes the hook. An exception in the hook is reported as unraisable, never raised into the pool.</p>
 </div>
 
 

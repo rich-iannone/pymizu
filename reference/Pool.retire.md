@@ -1,13 +1,13 @@
 # Pool.retire()
 
-Ask the worker in `slot` to exit cleanly (non-blocking,
+Ask the worker in `slot` to exit cleanly.
 
 Usage
 
-[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L1363-L1366)
+[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L1343-L1348)
 
 ``` python
 Pool.retire(slot)
 ```
 
-controller only).
+Non-blocking; controller only.

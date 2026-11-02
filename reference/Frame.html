@@ -815,7 +815,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb1"><pre class="sourceCode pythonsignature"><code class="sourceCode pythonsignature"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">Frame</span>()</span></code></pre></div>
 </div>
 <div class="doc-text">
-<p>to_dict() gives the column dict without an Arrow library; <strong>arrow_c_stream</strong> exports to polars / pyarrow / pandas. from_arrow() constructs one from an Arrow producer (the opt-in zero-copy path for Python-to-Python channels). R frame metadata (classes, extra attributes) survives an unmodified round trip; a rebuilt frame arrives in R as a plain data.frame.</p>
+<p>to_dict() returns the columns as a dict without an Arrow library, and <strong>arrow_c_stream</strong> exports to polars, pyarrow, or pandas. from_arrow() constructs one from an Arrow producer, the opt-in zero-copy path for Python-to-Python channels. R frame metadata (classes, extra attributes) survives an unmodified round trip, while a rebuilt frame arrives in R as a plain data.frame.</p>
 </div>
 
 

@@ -8,7 +8,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Contributions are welcome — bug reports and pull requests alike. pymizu is pre-release and the API can change at any time, so open an issue to discuss…">
+<meta name="description" content="Bug reports and pull requests are welcome. pymizu is pre-release and the API can change at any time, so open an issue to discuss larger changes before…">
 
 <title>Contributing | pymizu</title>
 <meta property="og:type" content="website">
@@ -133,11 +133,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <meta property="og:title" content="Contributing | pymizu">
-<meta property="og:description" content="Contributions are welcome — bug reports and pull requests alike. pymizu is pre-release and the API can change at any time, so open an issue to discuss…">
+<meta property="og:description" content="Bug reports and pull requests are welcome. pymizu is pre-release and the API can change at any time, so open an issue to discuss larger changes before…">
 <meta property="og:image" content="https://shikokuchuo.net/pymizu/assets/og-image.png">
 <meta property="og:site_name" content="pymizu">
 <meta name="twitter:title" content="Contributing | pymizu">
-<meta name="twitter:description" content="Contributions are welcome — bug reports and pull requests alike. pymizu is pre-release and the API can change at any time, so open an issue to discuss…">
+<meta name="twitter:description" content="Bug reports and pull requests are welcome. pymizu is pre-release and the API can change at any time, so open an issue to discuss larger changes before…">
 <meta name="twitter:image" content="https://shikokuchuo.net/pymizu/assets/og-image.png">
 <meta name="twitter:card" content="summary_large_image">
 </head>
@@ -221,10 +221,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>Contributions are welcome — bug reports and pull requests alike. pymizu is pre-release and the API can change at any time, so open an issue to discuss larger changes before doing the work.</p>
+<p>Bug reports and pull requests are welcome. pymizu is pre-release and the API can change at any time, so open an issue to discuss larger changes before doing the work.</p>
 <section id="reporting-bugs" class="level1">
 <h1>Reporting bugs</h1>
-<p>Open a GitHub issue with a minimal reproducer, your platform, and your Python version. For a pool that hangs, include the output of <code>pool.dump()</code> — it is the first diagnostic tool.</p>
+<p>Open a GitHub issue with a minimal reproducer, your platform, and your Python version. For a pool that hangs, include the output of <code>pool.dump()</code>, the first diagnostic tool.</p>
 </section>
 <section id="pull-requests" class="level1">
 <h1>Pull requests</h1>
@@ -237,7 +237,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Conventions:</p>
 <ul>
 <li>Commit messages are a single-line subject, no body.</li>
-<li>New behavior needs a test. Task callables used in pool tests belong in <code>tests/helpers.py</code>, not the test module — pickle sends them by reference, so spawned workers must import them.</li>
+<li>New behavior needs a test. Task callables used in pool tests belong in <code>tests/helpers.py</code>, not the test module, because pickle sends them by reference and the spawned workers must import them.</li>
 <li>Never edit <code>src/vendor/libmizu/</code> by hand. Changes go upstream to <a href="https://github.com/shikokuchuo/libmizu">libmizu</a> and land here via <code>tools/vendor-libmizu.sh</code>.</li>
 <li>Cross-language tests skip unless <code>Rscript</code> and the R <code>mizu</code> package are installed.</li>
 </ul>

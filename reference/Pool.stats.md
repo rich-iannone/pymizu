@@ -1,13 +1,13 @@
 # Pool.stats()
 
-Cumulative per-worker and per-submitter counters since each
+Cumulative per-worker and per-submitter counters.
 
 Usage
 
-[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L1474-L1478)
+[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L1462-L1468)
 
 ``` python
 Pool.stats()
 ```
 
-participant joined (dict with `workers` and `submitters` lists).
+Counted since each participant joined; a dict with `workers` and `submitters` lists.

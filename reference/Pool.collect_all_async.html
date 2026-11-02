@@ -8,7 +8,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="The event-driven collect_all():">
+<meta name="description" content="The event-driven collect_all().">
 
 <title>Pool.collect_all_async() | pymizu</title>
 <script type="application/ld+json">[{"@context": "https://schema.org", "@type": "SoftwareSourceCode", "name": "pymizu", "description": "Async and parallel Python at thread speed over shared memory", "codeRepository": "https://github.com/shikokuchuo/pymizu", "license": "https://opensource.org/licenses/MIT", "url": "https://shikokuchuo.net/pymizu", "documentation": "https://shikokuchuo.net/pymizu", "programmingLanguage": {"@type": "ComputerLanguage", "name": "Python"}}, {"@context": "https://schema.org", "@type": "WebPage", "name": "Pool.collect_all_async - pymizu", "isPartOf": {"@type": "WebSite", "name": "pymizu"}, "url": "https://shikokuchuo.net/pymizu/reference/Pool.collect_all_async.html"}]</script>
@@ -134,11 +134,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <meta property="og:title" content="Pool.collect_all_async() | pymizu">
-<meta property="og:description" content="The event-driven collect_all():">
+<meta property="og:description" content="The event-driven collect_all().">
 <meta property="og:image" content="https://shikokuchuo.net/pymizu/assets/og-image.png">
 <meta property="og:site_name" content="pymizu">
 <meta name="twitter:title" content="Pool.collect_all_async() | pymizu">
-<meta name="twitter:description" content="The event-driven collect_all():">
+<meta name="twitter:description" content="The event-driven collect_all().">
 <meta name="twitter:image" content="https://shikokuchuo.net/pymizu/assets/og-image.png">
 <meta name="twitter:card" content="summary_large_image">
 </head>
@@ -813,17 +813,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <div class="doc-subject">
-<p>The event-driven <a href="../reference/Pool.collect_all.html#pymizu.Pool.collect_all" class="gdls-link"><code>collect_all()</code></a>:</p>
+<p>The event-driven <a href="../reference/Pool.collect_all.html#pymizu.Pool.collect_all" class="gdls-link"><code>collect_all()</code></a>.</p>
 </div>
 <div class="doc-usage-source">
 <p>Usage</p>
-<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L1032-L1052" target="_blank" rel="noopener">Source</a></p>
+<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L1024-L1045" target="_blank" rel="noopener">Source</a></p>
 </div>
 <div class="doc-signature doc-function">
 <div class="sourceCode" id="cb1"><pre class="sourceCode pythonsignature"><code class="sourceCode pythonsignature"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dt">Pool</span><span class="op">.</span><span class="fu">collect_all_async</span>(<span class="va">tasks</span>)</span></code></pre></div>
 </div>
 <div class="doc-text">
-<p>exactly one <code>asyncio.Future</code> per collection.</p>
+<p>One <code>asyncio.Future</code> for the whole collection, resolved when every task is terminal.</p>
 </div>
 <section id="parameters" class="level2 doc-parameters">
 <h2 class="doc-parameters anchored" data-anchor-id="parameters">Parameters</h2>
@@ -840,9 +840,9 @@ The <a href="../reference/Task.html#pymizu.Task" class="gdls-link"><code>Task</c
 <h2 class="doc-returns anchored" data-anchor-id="returns">Returns</h2>
 <div class="doc-definition-items">
 <dl>
-<dt><code> <span class="doc-parameter-annotation">An <code>asyncio.Future</code> resolving with all values in input</span></code></dt>
+<dt><code> <span class="doc-parameter-annotation">An <code>asyncio.Future</code> resolving with all values in input order. The</span></code></dt>
 <dd>
-order; the first failure by position rejects with the exception the sync verb raises (<code>index</code> attribute carried — only that handle is consumed, the rest stay collectible). Cancelling the Future detaches every task and never cancels them.
+first failure by position rejects with the exception the sync verb raises, <code>index</code> attribute included; only that handle is consumed, and the rest stay collectible. Cancelling the Future detaches every task and never cancels them.
 </dd>
 </dl>
 </div>

@@ -824,7 +824,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div class="doc-usage-source">
 <p>Usage</p>
-<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_executor.py#L49-L338" target="_blank" rel="noopener">Source</a></p>
+<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_executor.py#L49-L336" target="_blank" rel="noopener">Source</a></p>
 </div>
 <div class="doc-signature doc-class">
 <div class="sourceCode" id="cb1"><pre class="sourceCode pythonsignature"><code class="sourceCode pythonsignature"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">PoolExecutor</span>(</span>
@@ -842,7 +842,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <dl>
 <dt><code><span class="doc-parameter-name">pool</span><span class="doc-parameter-annotation-sep">:</span> <span class="doc-parameter-annotation">pymizu.Pool</span></code></dt>
 <dd>
-<p>The pool to wrap; its lifetime stays with its owner unless <code>stop_pool</code> is set — then <a href="../reference/PoolExecutor.html#pymizu.PoolExecutor.shutdown" class="gdls-link gdls-code">shutdown()</a> stops it.</p>
+<p>The pool to wrap. Its lifetime stays with its owner unless <code>stop_pool</code> is set, in which case <a href="../reference/PoolExecutor.html#pymizu.PoolExecutor.shutdown" class="gdls-link gdls-code">shutdown()</a> stops it.</p>
 </dd>
 <dt><code><span class="doc-parameter-name">stop_pool</span><span class="doc-parameter-annotation-sep">:</span> <span class="doc-parameter-annotation">bool</span> <span class="doc-parameter-default-sep op">=</span> <span class="doc-parameter-default"><span class="va">False</span></span></code></dt>
 <dd>
@@ -853,12 +853,12 @@ When True, <a href="../reference/PoolExecutor.html#pymizu.PoolExecutor.shutdown"
 </section>
 <section id="notes" class="level2 doc-notes">
 <h2 class="doc-notes anchored" data-anchor-id="notes">Notes</h2>
-<p><code>submit()</code> (and the stdlib <a href="../reference/Pool.map.html#pymizu.Pool.map" class="gdls-link gdls-code">map</a> over it) is thread-safe, as the <code>concurrent.futures</code> contract requires: an internal lock serializes the single-producer pool handle. This is the adapter to reach for when several threads must submit to one pool. Differences from the stdlib: a task’s failure surfaces as <a href="../reference/TaskError.html#pymizu.TaskError" class="gdls-link gdls-code">pymizu.TaskError</a>; <code>Future.running()</code> is always False (futures resolve at completion); cancellation works like <a href="../reference/Task.html#pymizu.Task" class="gdls-link"><code>Task.cancel()</code></a> — it never interrupts a running task — and <code>shutdown(cancel_futures=True)</code> cancels every outstanding future, since the pool exposes no queued-versus-running signal (a running task completes, but its result is discarded). An internal failure (for example the wrapped pool is stopped from under the executor) fails every outstanding future; later submissions raise instead of queueing onto a broken executor. Futures resolve — and <code>add_done_callback</code> callbacks run — on pymizu’s listener thread, the same discipline as the stdlib executors’ management thread: keep callbacks short, and never block one on the pool itself. <a href="../reference/Pool.map.html#pymizu.Pool.map" class="gdls-link gdls-code">map</a> is the stdlib base implementation over <code>submit</code> — for bulk maps, <a href="../reference/Pool.map.html#pymizu.Pool.map" class="gdls-link"><code>Pool.map</code></a> is the faster path.</p>
+<p><code>submit()</code> (and the stdlib <a href="../reference/Pool.map.html#pymizu.Pool.map" class="gdls-link gdls-code">map</a> over it) is thread-safe, as the <code>concurrent.futures</code> contract requires: an internal lock serializes the single-producer pool handle. Use this adapter when several threads must submit to one pool. Differences from the stdlib: a task’s failure surfaces as <a href="../reference/TaskError.html#pymizu.TaskError" class="gdls-link gdls-code">pymizu.TaskError</a>; <code>Future.running()</code> is always False (futures resolve at completion); cancellation works like <a href="../reference/Task.html#pymizu.Task" class="gdls-link"><code>Task.cancel()</code></a> and never interrupts a running task; and <code>shutdown(cancel_futures=True)</code> cancels every outstanding future, since the pool exposes no queued-versus-running signal (a running task completes, but its result is discarded). An internal failure (for example the wrapped pool is stopped from under the executor) fails every outstanding future, and later submissions raise instead of queueing onto a broken executor. Futures resolve, and <code>add_done_callback</code> callbacks run, on pymizu’s listener thread, the same discipline as the stdlib executors’ management thread: keep callbacks short, and never block one on the pool itself. <a href="../reference/Pool.map.html#pymizu.Pool.map" class="gdls-link gdls-code">map</a> is the stdlib base implementation over <code>submit</code>; for bulk maps, <a href="../reference/Pool.map.html#pymizu.Pool.map" class="gdls-link"><code>Pool.map</code></a> is the faster path.</p>
 </section>
 <section id="examples" class="level2 doc-examples">
 <h2 class="doc-examples anchored" data-anchor-id="examples">Examples</h2>
 <p>Use as a drop-in <code>concurrent.futures.Executor</code>:</p>
-<div id="7720557b" class="cell" data-execution_count="1">
+<div id="f399182e" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pymizu</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> pymizu.PoolExecutor.create(<span class="dv">2</span>) <span class="im">as</span> ex:</span>
@@ -882,7 +882,7 @@ When True, <a href="../reference/PoolExecutor.html#pymizu.PoolExecutor.shutdown"
 <tbody>
 <tr class="odd">
 <td><a href="#create" class="doc-function doc-label doc-label-method">create()</a></td>
-<td>Spawn an owned pool —</td>
+<td>Spawn an owned pool and wrap it.</td>
 </tr>
 <tr class="even">
 <td><a href="#shutdown" class="doc-function doc-label doc-label-method">shutdown()</a></td>
@@ -897,11 +897,11 @@ When True, <a href="../reference/PoolExecutor.html#pymizu.PoolExecutor.shutdown"
 <section id="create" class="level3">
 <h3 class="anchored" data-anchor-id="create"><span class="doc-object-name doc-function doc-label doc-label-method">create()</span></h3>
 <div class="doc-subject">
-<p>Spawn an owned pool —</p>
+<p>Spawn an owned pool and wrap it.</p>
 </div>
 <div class="doc-usage-source">
 <p>Usage</p>
-<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_executor.py#L128-L149" target="_blank" rel="noopener">Source</a></p>
+<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_executor.py#L125-L147" target="_blank" rel="noopener">Source</a></p>
 </div>
 <div class="doc-signature doc-function">
 <div class="sourceCode" id="cb4"><pre class="sourceCode pythonsignature"><code class="sourceCode pythonsignature"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">create</span>(</span>
@@ -910,7 +910,7 @@ When True, <a href="../reference/PoolExecutor.html#pymizu.PoolExecutor.shutdown"
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
 </div>
 <div class="doc-text">
-<p><a href="../reference/Pool.create.html#pymizu.Pool.create" class="gdls-link"><code>Pool.create()</code></a> with <code>n_workers</code> and <code>pool_kwargs</code> — and wrap it; <a href="../reference/PoolExecutor.html#pymizu.PoolExecutor.shutdown" class="gdls-link gdls-code">shutdown()</a> stops it.</p>
+<p>Calls <a href="../reference/Pool.create.html#pymizu.Pool.create" class="gdls-link"><code>Pool.create()</code></a> with <code>n_workers</code> and <code>pool_kwargs</code>; <a href="../reference/PoolExecutor.html#pymizu.PoolExecutor.shutdown" class="gdls-link gdls-code">shutdown()</a> stops the pool.</p>
 </div>
 <section id="parameters-1" class="level4 doc-parameters">
 <h4 class="doc-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
@@ -946,7 +946,7 @@ Forwarded to <a href="../reference/Pool.create.html#pymizu.Pool.create" class="g
 </div>
 <div class="doc-usage-source">
 <p>Usage</p>
-<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_executor.py#L205-L233" target="_blank" rel="noopener">Source</a></p>
+<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_executor.py#L203-L231" target="_blank" rel="noopener">Source</a></p>
 </div>
 <div class="doc-signature doc-function">
 <div class="sourceCode" id="cb5"><pre class="sourceCode pythonsignature"><code class="sourceCode pythonsignature"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">shutdown</span>(</span>
@@ -978,7 +978,7 @@ Cancel the not-yet-started futures. Stops the pool only when <code>stop_pool</co
 </div>
 <div class="doc-usage-source">
 <p>Usage</p>
-<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_executor.py#L151-L203" target="_blank" rel="noopener">Source</a></p>
+<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_executor.py#L149-L201" target="_blank" rel="noopener">Source</a></p>
 </div>
 <div class="doc-signature doc-function">
 <div class="sourceCode" id="cb6"><pre class="sourceCode pythonsignature"><code class="sourceCode pythonsignature"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">submit</span>(</span>

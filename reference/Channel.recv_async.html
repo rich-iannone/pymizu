@@ -8,7 +8,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="The event-driven receive: an asyncio.Future for the next">
+<meta name="description" content="Receive the next value as an asyncio.Future.">
 
 <title>Channel.recv_async() | pymizu</title>
 <script type="application/ld+json">[{"@context": "https://schema.org", "@type": "SoftwareSourceCode", "name": "pymizu", "description": "Async and parallel Python at thread speed over shared memory", "codeRepository": "https://github.com/shikokuchuo/pymizu", "license": "https://opensource.org/licenses/MIT", "url": "https://shikokuchuo.net/pymizu", "documentation": "https://shikokuchuo.net/pymizu", "programmingLanguage": {"@type": "ComputerLanguage", "name": "Python"}}, {"@context": "https://schema.org", "@type": "WebPage", "name": "Channel.recv_async - pymizu", "isPartOf": {"@type": "WebSite", "name": "pymizu"}, "url": "https://shikokuchuo.net/pymizu/reference/Channel.recv_async.html"}]</script>
@@ -134,11 +134,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <meta property="og:title" content="Channel.recv_async() | pymizu">
-<meta property="og:description" content="The event-driven receive: an asyncio.Future for the next">
+<meta property="og:description" content="Receive the next value as an asyncio.Future.">
 <meta property="og:image" content="https://shikokuchuo.net/pymizu/assets/og-image.png">
 <meta property="og:site_name" content="pymizu">
 <meta name="twitter:title" content="Channel.recv_async() | pymizu">
-<meta name="twitter:description" content="The event-driven receive: an asyncio.Future for the next">
+<meta name="twitter:description" content="Receive the next value as an asyncio.Future.">
 <meta name="twitter:image" content="https://shikokuchuo.net/pymizu/assets/og-image.png">
 <meta name="twitter:card" content="summary_large_image">
 </head>
@@ -813,33 +813,33 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <div class="doc-subject">
-<p>The event-driven receive: an <code>asyncio.Future</code> for the next</p>
+<p>Receive the next value as an <code>asyncio.Future</code>.</p>
 </div>
 <div class="doc-usage-source">
 <p>Usage</p>
-<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L356-L392" target="_blank" rel="noopener">Source</a></p>
+<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L354-L388" target="_blank" rel="noopener">Source</a></p>
 </div>
 <div class="doc-signature doc-function">
 <div class="sourceCode" id="cb1"><pre class="sourceCode pythonsignature"><code class="sourceCode pythonsignature"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dt">Channel</span><span class="op">.</span><span class="fu">recv_async</span>()</span></code></pre></div>
 </div>
 <div class="doc-text">
-<p>value, resolved when it arrives — never blocks, never polls.</p>
+<p>The event-driven receive: the Future resolves when the value arrives, without blocking or polling.</p>
 </div>
 <section id="returns" class="level2 doc-returns">
 <h2 class="doc-returns anchored" data-anchor-id="returns">Returns</h2>
 <div class="doc-definition-items">
 <dl>
-<dt><code> <span class="doc-parameter-annotation">An <code>asyncio.Future</code> resolving with the same object a</span></code></dt>
+<dt><code> <span class="doc-parameter-annotation">An <code>asyncio.Future</code> resolving with the same object a blocking</span></code></dt>
 <dd>
-blocking <a href="../reference/Channel.recv.html#pymizu.Channel.recv" class="gdls-link"><code>recv()</code></a> would have returned — the receive itself runs on the event-loop thread — zero-copy views included. Terminal states stay values: the Future resolves with the <code>CLOSED</code> / <code>PEER_GONE</code> sentinel.
+<a href="../reference/Channel.recv.html#pymizu.Channel.recv" class="gdls-link"><code>recv()</code></a> would have returned, zero-copy views included (the receive itself runs on the event-loop thread). Terminal states stay values: the Future resolves with the <code>CLOSED</code> / <code>PEER_GONE</code> sentinel.
 </dd>
 </dl>
 </div>
 </section>
 <section id="details" class="level2 doc-details">
 <h2 class="doc-details anchored" data-anchor-id="details">Details</h2>
-<p>Several outstanding calls on one channel resolve in call order, one message each. Nothing is lost while arming: values already in the ring resolve immediately, and only values not yet sent wait for the wake-up. Cancelling the Future detaches the waiter — the next message goes to the next waiter. There is no <code>timeout</code> argument: use <code>asyncio.timeout</code> or <code>asyncio.wait_for</code>. A channel created with <code>spin=True</code> cannot arm and raises. The async consumer is the side’s one consumer: a blocking <a href="../reference/Channel.recv.html#pymizu.Channel.recv" class="gdls-link"><code>recv()</code></a> on the same side while waiters are pending raises <a href="../reference/ConcurrentUseError.html#pymizu.ConcurrentUseError" class="gdls-link"><code>ConcurrentUseError</code></a>.</p>
-<p>A message the peer sent outside the portable interchange subset (a language-private stream) rejects only the waiter that receives it, with <a href="../reference/ForeignPayloadError.html#pymizu.ForeignPayloadError" class="gdls-link"><code>ForeignPayloadError</code></a> — the message is consumed and the async consumer keeps flowing, so the other outstanding calls are unaffected.</p>
+<p>Several outstanding calls on one channel resolve in call order, one message each. Nothing is lost while arming: values already in the ring resolve immediately, and only values not yet sent wait for the wake-up. Cancelling the Future detaches the waiter, and the next message goes to the next waiter. There is no <code>timeout</code> argument: use <code>asyncio.timeout</code> or <code>asyncio.wait_for</code>. A channel created with <code>spin=True</code> cannot arm and raises. The async consumer is the side’s one consumer: a blocking <a href="../reference/Channel.recv.html#pymizu.Channel.recv" class="gdls-link"><code>recv()</code></a> on the same side while waiters are pending raises <a href="../reference/ConcurrentUseError.html#pymizu.ConcurrentUseError" class="gdls-link"><code>ConcurrentUseError</code></a>.</p>
+<p>A message the peer sent outside the portable interchange subset (a language-private stream) rejects only the waiter that receives it, with <a href="../reference/ForeignPayloadError.html#pymizu.ForeignPayloadError" class="gdls-link"><code>ForeignPayloadError</code></a>. The message is consumed and the async consumer keeps flowing, so the other outstanding calls are unaffected.</p>
 
 
 </section>

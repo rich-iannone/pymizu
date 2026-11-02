@@ -1,10 +1,10 @@
 # Pool.submit_batch()
 
-Submit one task per zero-arg callable in `fns` in one
+Submit one task per zero-arg callable in `fns` in one call.
 
 Usage
 
-[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L910-L946)
+[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L904-L938)
 
 ``` python
 Pool.submit_batch(
@@ -13,8 +13,6 @@ Pool.submit_batch(
     timeout=None,
 )
 ```
-
-call.
 
 ## Parameters
 
@@ -26,8 +24,8 @@ Seconds to wait for queue space; None waits indefinitely.
 
 ## Returns
 
-`A list of Task handles. If the queue`  
-stays full past `timeout` the batch ends short -- the returned handles stay valid and collectible. A mid-batch failure raises with an `accepted` attribute holding the handles already submitted, which stay valid and collectible.
+`A list of Task handles. If the queue stays full`  
+past `timeout` the batch ends short, and the returned handles stay valid and collectible. A mid-batch failure raises with an `accepted` attribute holding the handles already submitted, which stay valid and collectible.
 
 ## Raises
 

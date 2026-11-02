@@ -4,7 +4,7 @@ A map set up once in shared memory, run many times.
 
 Usage
 
-[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_map.py#L2014-L2365)
+[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_map.py#L2012-L2363)
 
 ``` python
 PreparedMap(
@@ -28,7 +28,7 @@ Create with [`Pool.map_prepare()`](../reference/Pool.map_prepare.md#pymizu.Pool.
 The [`Pool`](../reference/Pool.md#pymizu.Pool) to run on.
 
 `fn: _Callable[…, _Any]`  
-The function to map, or a [`call`](../reference/call.md#pymizu.call) spec -- as for [`Pool.map()`](../reference/Pool.map.md#pymizu.Pool.map).
+The function to map, or a [`call`](../reference/call.md#pymizu.call) spec, as for [`Pool.map()`](../reference/Pool.map.md#pymizu.Pool.map).
 
 `x: _Any`  
 The data to map over.
@@ -43,10 +43,10 @@ Constant keyword arguments for every call.
 Overrides the number of batches the elements are split into.
 
 `template: _Any = None`  
-An example buffer declaring each result's dtype and length -- as for [`Pool.map()`](../reference/Pool.map.md#pymizu.Pool.map).
+An example buffer declaring each result's dtype and length, as for [`Pool.map()`](../reference/Pool.map.md#pymizu.Pool.map).
 
 `stream: bool = False`  
-Stream slices of `x` instead of writing it to shared memory whole -- as for [`Pool.map()`](../reference/Pool.map.md#pymizu.Pool.map). The map is set up here; `seed` and `collect` are per-run options of [`PreparedMap.run()`](../reference/PreparedMap.md#pymizu.PreparedMap.run) (mirroring mizu's `mizu_map_run()`).
+Stream slices of `x` instead of writing it to shared memory whole, as for [`Pool.map()`](../reference/Pool.map.md#pymizu.Pool.map). The map is set up here; `seed` and `collect` are per-run options of [`PreparedMap.run()`](../reference/PreparedMap.md#pymizu.PreparedMap.run) (mirroring mizu's `mizu_map_run()`).
 
 ## Examples
 
@@ -69,24 +69,24 @@ second
 
 ## Methods
 
-| Name | Description |
-|----|----|
-| [close()](#close) | Unlink the staged region (idempotent; the GC backstop is the |
-| [run()](#run) | Run the prepared map once; return the run's map handle. |
+| Name              | Description                                             |
+|-------------------|---------------------------------------------------------|
+| [close()](#close) | Release the staged shared memory.                       |
+| [run()](#run)     | Run the prepared map once; return the run's map handle. |
 
 ### close()
 
-Unlink the staged region (idempotent; the GC backstop is the
+Release the staged shared memory.
 
 Usage
 
-[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_map.py#L2349-L2355)
+[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_map.py#L2344-L2353)
 
 ``` python
 close()
 ```
 
-capsule destructor).
+Safe to call more than once; garbage collection releases it otherwise.
 
 ### run()
 
@@ -94,7 +94,7 @@ Run the prepared map once; return the run's map handle.
 
 Usage
 
-[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_map.py#L2224-L2347)
+[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_map.py#L2222-L2342)
 
 ``` python
 run(
@@ -109,18 +109,18 @@ run(
 #### Parameters
 
 `x: _Any = None`  
-Replaces the staged data for this and later runs. When both the staged and the replacement x are arrays of the same dtype and length, the swap is an in-place copy -- a loop that iterates over same-shaped data (optimizer steps, simulation sweeps) runs at copy cost, skipping the region creation and the worker-side set-up. Any other x is staged fresh on this run.
+Replaces the staged data for this and later runs. When both the staged and the replacement x are arrays of the same dtype and length, the swap is an in-place copy, so a loop over same-shaped data (optimizer steps, simulation sweeps) runs at copy cost, skipping the region creation and the worker-side set-up. Any other x is staged fresh on this run.
 
 `seed: int | bytes | bytearray | tuple[int | bytes | bytearray, int] | None = None`  
-Deterministic per-element seeding for this run, as for [`Pool.map()`](../reference/Pool.map.md#pymizu.Pool.map); `None` (the default) runs unseeded. The seed travels with the run's tasks, not the staged data, so reseeding a run is free -- the repeated-simulation loop varies `seed` per run while the set-up is paid once.
+Deterministic per-element seeding for this run, as for [`Pool.map()`](../reference/Pool.map.md#pymizu.Pool.map); `None` (the default) runs unseeded. The seed travels with the run's tasks, not the staged data, so reseeding a run costs nothing extra: a repeated-simulation loop varies `seed` per run while the set-up is paid once.
 
 `timeout: float | None = None`  
 Seconds before the run's submission gives up; on expiry the tasks already in are cancelled and the TIMEOUT [`Sentinel`](../reference/Sentinel.md#pymizu.Sentinel) is returned (no handle). The collection deadline is the handle's `collect()`.
 
 `collect: str | None = None`  
-`"copy"` (the default) or `"view"`, which requires `template` -- as for [`Pool.map()`](../reference/Pool.map.md#pymizu.Pool.map). The choice is per run.
+`"copy"` (the default) or `"view"`, which requires `template`, as for [`Pool.map()`](../reference/Pool.map.md#pymizu.Pool.map). The choice is per run.
 
 #### Returns
 
-`The run's map handle -- collected exactly once, by`  
-`collect()` (blocking) or `collect_async()` (event-driven). A run is a producer on the pool handle: a concurrent run or submit from a second thread raises [ConcurrentUseError](../reference/ConcurrentUseError.md#pymizu.ConcurrentUseError). A clean value collect keeps the set-up for the next run; a view collect hands the region to the view, and an interrupted run (timeout, an error, a worker death) drops it -- the next run stages a fresh one either way.
+`The run's map handle, collected exactly once, by collect()`  
+(blocking) or `collect_async()` (event-driven). A run is a producer on the pool handle: a concurrent run or submit from a second thread raises [ConcurrentUseError](../reference/ConcurrentUseError.md#pymizu.ConcurrentUseError). A clean value collect keeps the set-up for the next run. A view collect hands the region to the view, and an interrupted run (timeout, an error, a worker death) drops it, so the next run stages a fresh one either way.

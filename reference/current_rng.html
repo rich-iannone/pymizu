@@ -818,7 +818,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div class="doc-usage-source">
 <p>Usage</p>
-<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L1575-L1608" target="_blank" rel="noopener">Source</a></p>
+<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L1565-L1598" target="_blank" rel="noopener">Source</a></p>
 </div>
 <div class="doc-signature doc-function">
 <div class="sourceCode" id="cb1"><pre class="sourceCode pythonsignature"><code class="sourceCode pythonsignature"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">current_rng</span>()</span></code></pre></div>
@@ -847,8 +847,8 @@ When numpy is not installed.
 </section>
 <section id="details" class="level2 doc-details">
 <h2 class="doc-details anchored" data-anchor-id="details">Details</h2>
-<p><a href="../reference/Pool.map.html#pymizu.Pool.map" class="gdls-link"><code>Pool.map()</code></a> <code>seed=</code> seeds the stdlib <code>random</code> module per element; a task drawing from numpy calls this instead: the element’s own <code>numpy.random.Generator</code>, derived from the same seed material on first call in the element (kept separate from the stdlib derivation, so those streams are unchanged). Two calls in one element continue one stream; distinct elements get distinct streams — results identical for any chunking, worker count, or steal order.</p>
-<p>Outside a seeded map element (an unseeded map, an ordinary task, the submitter process) the return is None. A seeded map element must not submit and collect nested tasks: while the worker waits it runs other work, possibly another map’s batches mid-element, which wipes this element’s stash — a later call rebuilds from the seed, restarting the stream instead of continuing it.</p>
+<p><a href="../reference/Pool.map.html#pymizu.Pool.map" class="gdls-link"><code>Pool.map()</code></a> <code>seed=</code> seeds the stdlib <code>random</code> module per element; a task drawing from numpy calls this instead: the element’s own <code>numpy.random.Generator</code>, derived from the same seed material on first call in the element (kept separate from the stdlib derivation, so those streams are unchanged). Two calls in one element continue one stream, and distinct elements get distinct streams, so results are identical for any chunking, worker count, or steal order.</p>
+<p>Outside a seeded map element (an unseeded map, an ordinary task, the submitter process) the return is None. A seeded map element must not submit and collect nested tasks: while the worker waits it runs other work, possibly another map’s batches mid-element, which wipes this element’s stash. A later call rebuilds from the seed, restarting the stream instead of continuing it.</p>
 
 
 </section>

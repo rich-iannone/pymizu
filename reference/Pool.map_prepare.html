@@ -810,7 +810,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div class="doc-usage-source">
 <p>Usage</p>
-<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L1321-L1361" target="_blank" rel="noopener">Source</a></p>
+<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L1303-L1341" target="_blank" rel="noopener">Source</a></p>
 </div>
 <div class="doc-signature doc-function">
 <div class="sourceCode" id="cb1"><pre class="sourceCode pythonsignature"><code class="sourceCode pythonsignature"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dt">Pool</span><span class="op">.</span><span class="fu">map_prepare</span>(</span>
@@ -825,7 +825,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
 </div>
 <div class="doc-text">
-<p>Takes the same arguments as <a href="../reference/Pool.map.html#pymizu.Pool.map" class="gdls-link"><code>map()</code></a> (minus <code>seed</code>, <code>timeout</code>, and <code>collect</code> — the per-run options, which move to <a href="../reference/PreparedMap.html#pymizu.PreparedMap.run" class="gdls-link"><code>PreparedMap.run()</code></a>). The set-up — pickling the description, creating the shared region, the worker-side attach — is paid once here; each <code>pm.run()</code> re-arms cheaply, reuses the workers’ cached set-up, and returns the run’s <a href="../reference/Map.html#pymizu.Map" class="gdls-link"><code>Map</code></a> handle (the collect happens on it). A run collected with <code>collect="view"</code> hands its region to the view, so the next run stages a fresh one. With <code>stream=True</code> the staged <code>x</code> stays on the submitter, so a replacement <code>x</code> of any shape simply re-slices — only a length change under <code>template</code> stages fresh shared memory (the output area is sized for the staged length). Close the handle (or use it as a context manager) to release the region.</p>
+<p>Takes the same arguments as <a href="../reference/Pool.map.html#pymizu.Pool.map" class="gdls-link"><code>map()</code></a> except <code>seed</code>, <code>timeout</code>, and <code>collect</code>, which are per-run options of <a href="../reference/PreparedMap.html#pymizu.PreparedMap.run" class="gdls-link"><code>PreparedMap.run()</code></a>. The set-up (pickling the description, creating the shared region, the worker-side attach) is paid once here. Each <code>pm.run()</code> re-arms cheaply, reuses the workers’ cached set-up, and returns the run’s <a href="../reference/Map.html#pymizu.Map" class="gdls-link"><code>Map</code></a> handle, on which the results are collected. A run collected with <code>collect="view"</code> hands its region to the view, so the next run stages a fresh one. With <code>stream=True</code> the staged <code>x</code> stays on the submitter, so a replacement <code>x</code> of any shape re-slices. Only a length change under <code>template</code> stages fresh shared memory, because the output area is sized for the staged length. Close the handle (or use it as a context manager) to release the region.</p>
 </div>
 
 

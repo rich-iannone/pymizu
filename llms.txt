@@ -34,7 +34,7 @@
 > A set of worker processes that divide submitted tasks among themselves.
 
 - [Pool](https://shikokuchuo.net/pymizu/reference/Pool.html): A shared-memory work-stealing task pool handle (process-private)
-- [Task](https://shikokuchuo.net/pymizu/reference/Task.html): A task handle from Pool.submit(). Collected exactly once; an uncollected handle's finalizer releases its slot
+- [Task](https://shikokuchuo.net/pymizu/reference/Task.html): A task handle from Pool.submit(). It is collected exactly once, and an uncollected handle releases its slot when garbage collected
 - [Map](https://shikokuchuo.net/pymizu/reference/Map.html): A staged, submitted map; collects exactly once, through this handle
 - [PreparedMap](https://shikokuchuo.net/pymizu/reference/PreparedMap.html): A map set up once in shared memory, run many times
 - [PoolExecutor](https://shikokuchuo.net/pymizu/reference/PoolExecutor.html): A `concurrent.futures.Executor` over a pymizu pool
@@ -82,7 +82,7 @@
 - [launcher](https://shikokuchuo.net/pymizu/reference/launcher.html): Return a launcher spawning Python processes running pymizu
 - [r_launcher](https://shikokuchuo.net/pymizu/reference/r_launcher.html): Return a launcher spawning R processes running the `mizu` package
 - [Frame](https://shikokuchuo.net/pymizu/reference/Frame.html): A data.frame's Python home: named columns with a row count
-- [DimArray](https://shikokuchuo.net/pymizu/reference/DimArray.html): An `ndarray` carrying R labels (`names` / `dimnames` /
+- [DimArray](https://shikokuchuo.net/pymizu/reference/DimArray.html): An `ndarray` carrying R labels for faithful round trips with R
 
 #### Frame Methods
 > Methods for the Frame class
@@ -98,7 +98,7 @@
 #### Outcomes and errors
 > A full ring, a timeout, a close, or a dead peer returns as a sentinel singleton — FULL / TIMEOUT / CLOSED / PEER_GONE — tested by identity, never raised. Real failures raise exceptions.
 
-- [Sentinel](https://shikokuchuo.net/pymizu/reference/Sentinel.html): Terminal-state sentinel returned by pymizu verbs. Identity-tested against pymizu.FULL / TIMEOUT / CLOSED / PEER_GONE
+- [Sentinel](https://shikokuchuo.net/pymizu/reference/Sentinel.html): A terminal-state sentinel returned by pymizu verbs. Test by identity against pymizu.FULL / TIMEOUT / CLOSED / PEER_GONE
 - [is_sentinel](https://shikokuchuo.net/pymizu/reference/is_sentinel.html): is_sentinel(x) -> bool
 - [is_remote_error](https://shikokuchuo.net/pymizu/reference/is_remote_error.html): Test whether a received channel value is a remote error
 - [MizuError](https://shikokuchuo.net/pymizu/reference/MizuError.html): Base class for all pymizu errors
@@ -110,9 +110,9 @@
 - [CancelledError](https://shikokuchuo.net/pymizu/reference/CancelledError.html): The task was cancelled before it ran
 - [TaskError](https://shikokuchuo.net/pymizu/reference/TaskError.html): The task callable raised. Carries 'remote_type' and 'detail' attributes describing the worker-side exception
 - [WorkerDiedError](https://shikokuchuo.net/pymizu/reference/WorkerDiedError.html): The executing worker died mid-task. Carries 'slot' and 'pid' attributes identifying the worker
-- [TaskLostError](https://shikokuchuo.net/pymizu/reference/TaskLostError.html): The claimant's read of the task's payload region failed without a death verdict — a vanished or unreadable region, not a dead worker
+- [TaskLostError](https://shikokuchuo.net/pymizu/reference/TaskLostError.html): The task's payload region vanished or could not be read before any worker ran it. No worker died
 - [DeclinedError](https://shikokuchuo.net/pymizu/reference/DeclinedError.html): A send on a foreign-language channel of a value outside the portable interchange subset. Carries 'path' and 'reason' attributes ('reason' includes the one-line rewrite guidance for the value)
-- [ForeignPayloadError](https://shikokuchuo.net/pymizu/reference/ForeignPayloadError.html): A received payload in a language-private or unrecognized format: a peer sent outside the portable interchange subset. The message is consumed, never wedging the ring; the async drain rejects only the head waiter and continues
+- [ForeignPayloadError](https://shikokuchuo.net/pymizu/reference/ForeignPayloadError.html): A received payload in a language-private or unrecognized format: the peer sent a value outside the portable interchange subset. The message is consumed, so the ring is never blocked, and under recv_async() only the Future waiting on that message rejects
 - [ConcurrentUseError](https://shikokuchuo.net/pymizu/reference/ConcurrentUseError.html): A verb ran concurrently with another verb in the same handle role: each handle role is confined to one thread at a time (libmizu 'Handle threading')
 
 #### Housekeeping

@@ -1,10 +1,10 @@
 # Channel.recv_batch()
 
-Receive up to `n` values in one call; a list (possibly
+Receive up to `n` values in one call.
 
 Usage
 
-[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L418-L423)
+[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L412-L419)
 
 ``` python
 Channel.recv_batch(
@@ -13,4 +13,4 @@ Channel.recv_batch(
 )
 ```
 
-short or empty), or a terminal sentinel.
+Returns a list (possibly short or empty), or a terminal sentinel.

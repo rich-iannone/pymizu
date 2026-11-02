@@ -821,7 +821,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div class="doc-usage-source">
 <p>Usage</p>
-<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_map.py#L1506-L2011" target="_blank" rel="noopener">Source</a></p>
+<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_map.py#L1506-L2009" target="_blank" rel="noopener">Source</a></p>
 </div>
 <div class="doc-signature doc-class">
 <div class="sourceCode" id="cb1"><pre class="sourceCode pythonsignature"><code class="sourceCode pythonsignature"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">Map</span>(</span>
@@ -830,7 +830,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
 </div>
 <div class="doc-text">
-<p>The handle-first return of <a href="../reference/Pool.map.html#pymizu.Pool.map" class="gdls-link"><code>Pool.map()</code></a> and <a href="../reference/PreparedMap.html#pymizu.PreparedMap.run" class="gdls-link"><code>PreparedMap.run()</code></a>. <code>collect()</code> blocks; <code>collect_async()</code> / <code>await</code> resolves one asyncio Future when the results arrive (never on a streaming map — its sliding task window advances in the blocking collect loop); <code>cancel()</code> stops the run: workers halt within about one batch and the outstanding tasks are cancelled. A dropped uncollected handle cancels at GC, so no run of fn is wasted. One collection per handle, as for tasks.</p>
+<p>Returned by <a href="../reference/Pool.map.html#pymizu.Pool.map" class="gdls-link"><code>Pool.map()</code></a> and <a href="../reference/PreparedMap.html#pymizu.PreparedMap.run" class="gdls-link"><code>PreparedMap.run()</code></a>. <code>collect()</code> blocks. <code>collect_async()</code> or <code>await</code> resolves one asyncio Future when the results arrive (not on a streaming map, whose sliding task window advances in the blocking collect loop). <code>cancel()</code> stops the run: workers halt within about one batch and the outstanding tasks are cancelled. A dropped uncollected handle cancels at GC, so no run of fn is wasted. One collection per handle, as for tasks.</p>
 </div>
 <section id="methods" class="level2 doc-methods">
 <h2 class="doc-methods anchored" data-anchor-id="methods">Methods</h2>
@@ -863,13 +863,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div class="doc-usage-source">
 <p>Usage</p>
-<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_map.py#L1971-L1993" target="_blank" rel="noopener">Source</a></p>
+<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_map.py#L1970-L1991" target="_blank" rel="noopener">Source</a></p>
 </div>
 <div class="doc-signature doc-function">
 <div class="sourceCode" id="cb2"><pre class="sourceCode pythonsignature"><code class="sourceCode pythonsignature"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cancel</span>()</span></code></pre></div>
 </div>
 <div class="doc-text">
-<p>Advisory, as <a href="../reference/Task.cancel.html#pymizu.Task.cancel" class="gdls-link"><code>Task.cancel()</code></a>: the outstanding tasks are cancelled — a queued task is skipped, a running batch completes and its result is dropped. A pending collect — blocking or async — ends with <a href="../reference/CancelledError.html#pymizu.CancelledError" class="gdls-link"><code>CancelledError</code></a>. Safe to call more than once.</p>
+<p>Advisory, as <a href="../reference/Task.cancel.html#pymizu.Task.cancel" class="gdls-link"><code>Task.cancel()</code></a>: the outstanding tasks are cancelled, so a queued task is skipped, and a running batch completes with its result dropped. A pending collect, blocking or async, ends with <a href="../reference/CancelledError.html#pymizu.CancelledError" class="gdls-link"><code>CancelledError</code></a>. Safe to call more than once.</p>
 </div>
 </section>
 <section id="collect" class="level3">
@@ -890,7 +890,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <dl>
 <dt><code><span class="doc-parameter-name">timeout</span><span class="doc-parameter-annotation-sep">:</span> <span class="doc-parameter-annotation">float | None</span> <span class="doc-parameter-default-sep op">=</span> <span class="doc-parameter-default">None</span></code></dt>
 <dd>
-Seconds to wait for completion; None waits indefinitely. On expiry the outstanding work is cancelled and the <code>TIMEOUT</code> <a href="../reference/Sentinel.html#pymizu.Sentinel" class="gdls-link"><code>Sentinel</code></a> is returned, never raised.
+Seconds to wait for completion; None waits indefinitely. On expiry the outstanding work is cancelled and the <code>TIMEOUT</code> <a href="../reference/Sentinel.html#pymizu.Sentinel" class="gdls-link"><code>Sentinel</code></a> is returned rather than raised.
 </dd>
 </dl>
 </div>
@@ -899,7 +899,7 @@ Seconds to wait for completion; None waits indefinitely. On expiry the outstandi
 <h4 class="doc-returns anchored" data-anchor-id="returns">Returns</h4>
 <div class="doc-definition-items">
 <dl>
-<dt><code> <span class="doc-parameter-annotation">The results — the same shapes and outcomes as</span></code></dt>
+<dt><code> <span class="doc-parameter-annotation">The results, with the same shapes and outcomes as</span></code></dt>
 <dd>
 <a href="../reference/PreparedMap.html#pymizu.PreparedMap" class="gdls-link"><code>PreparedMap.run()</code></a> documents.
 </dd>
@@ -914,13 +914,13 @@ Seconds to wait for completion; None waits indefinitely. On expiry the outstandi
 </div>
 <div class="doc-usage-source">
 <p>Usage</p>
-<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_map.py#L1906-L1940" target="_blank" rel="noopener">Source</a></p>
+<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_map.py#L1906-L1939" target="_blank" rel="noopener">Source</a></p>
 </div>
 <div class="doc-signature doc-function">
 <div class="sourceCode" id="cb4"><pre class="sourceCode pythonsignature"><code class="sourceCode pythonsignature"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_async</span>()</span></code></pre></div>
 </div>
 <div class="doc-text">
-<p>The event-driven collect — never blocks, never polls. An element error rejects with its index. Cancelling the Future detaches the waiter (the handle collects blocking again); it never cancels the map — <code>cancel()</code> stays the explicit verb. A streaming map refuses: its sliding task window advances in the blocking collect loop.</p>
+<p>The event-driven collect, which never blocks or polls. An element error rejects with its index. Cancelling the Future detaches the waiter, so the handle can be collected blocking again, and never cancels the map (only <code>cancel()</code> does). A streaming map refuses, because its sliding task window advances in the blocking collect loop.</p>
 </div>
 
 

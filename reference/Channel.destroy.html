@@ -8,7 +8,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Tear down the handle immediately, without the close">
+<meta name="description" content="Tear down the handle immediately, without the close handshake.">
 
 <title>Channel.destroy() | pymizu</title>
 <script type="application/ld+json">[{"@context": "https://schema.org", "@type": "SoftwareSourceCode", "name": "pymizu", "description": "Async and parallel Python at thread speed over shared memory", "codeRepository": "https://github.com/shikokuchuo/pymizu", "license": "https://opensource.org/licenses/MIT", "url": "https://shikokuchuo.net/pymizu", "documentation": "https://shikokuchuo.net/pymizu", "programmingLanguage": {"@type": "ComputerLanguage", "name": "Python"}}, {"@context": "https://schema.org", "@type": "WebPage", "name": "Channel.destroy - pymizu", "isPartOf": {"@type": "WebSite", "name": "pymizu"}, "url": "https://shikokuchuo.net/pymizu/reference/Channel.destroy.html"}]</script>
@@ -134,11 +134,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <meta property="og:title" content="Channel.destroy() | pymizu">
-<meta property="og:description" content="Tear down the handle immediately, without the close">
+<meta property="og:description" content="Tear down the handle immediately, without the close handshake.">
 <meta property="og:image" content="https://shikokuchuo.net/pymizu/assets/og-image.png">
 <meta property="og:site_name" content="pymizu">
 <meta name="twitter:title" content="Channel.destroy() | pymizu">
-<meta name="twitter:description" content="Tear down the handle immediately, without the close">
+<meta name="twitter:description" content="Tear down the handle immediately, without the close handshake.">
 <meta name="twitter:image" content="https://shikokuchuo.net/pymizu/assets/og-image.png">
 <meta name="twitter:card" content="summary_large_image">
 </head>
@@ -806,17 +806,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <div class="doc-subject">
-<p>Tear down the handle immediately, without the close</p>
+<p>Tear down the handle immediately, without the close handshake.</p>
 </div>
 <div class="doc-usage-source">
 <p>Usage</p>
-<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L456-L470" target="_blank" rel="noopener">Source</a></p>
+<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L454-L469" target="_blank" rel="noopener">Source</a></p>
 </div>
 <div class="doc-signature doc-function">
 <div class="sourceCode" id="cb1"><pre class="sourceCode pythonsignature"><code class="sourceCode pythonsignature"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dt">Channel</span><span class="op">.</span><span class="fu">destroy</span>()</span></code></pre></div>
 </div>
 <div class="doc-text">
-<p>handshake: the peer sees the channel as closed (PEER_GONE if it died hard). Safe from any thread — the one verb that is. A verb still running on another thread keeps the handle alive, and teardown completes when the last one returns; an indefinite wait (recv, recv_batch, ready_wait, close) wakes promptly for this to happen. Pending recv futures settle with PEER_GONE. The any-thread license covers this verb only; every other verb stays confined to one thread (the class docstring).</p>
+<p>The peer sees the channel as closed (PEER_GONE if it died hard). This is the one verb that is safe from any thread. A verb still running on another thread keeps the handle alive, and teardown completes when the last one returns; an indefinite wait (recv, recv_batch, ready_wait, close) wakes promptly so that this can happen. Pending recv futures settle with PEER_GONE. Every other verb stays confined to one thread (see the class docstring).</p>
 </div>
 
 

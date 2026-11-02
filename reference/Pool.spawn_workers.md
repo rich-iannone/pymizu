@@ -1,10 +1,10 @@
 # Pool.spawn_workers()
 
-Spawn `n` additional workers and wait for them to join
+Spawn `n` additional workers and wait for them to join.
 
 Usage
 
-[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L1368-L1412)
+[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L1350-L1395)
 
 ``` python
 Pool.spawn_workers(
@@ -15,7 +15,7 @@ Pool.spawn_workers(
 )
 ```
 
-(controller only).
+Controller only.
 
 ## Parameters
 

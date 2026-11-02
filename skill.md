@@ -49,7 +49,7 @@ Methods for the Channel class
 A set of worker processes that divide submitted tasks among themselves.
 
 - `Pool`: A shared-memory work-stealing task pool handle (process-private)
-- `Task`: A task handle from Pool.submit(). Collected exactly once; an uncollected handle's finalizer releases its slot
+- `Task`: A task handle from Pool.submit(). It is collected exactly once, and an uncollected handle releases its slot when garbage collected
 - `Map`: A staged, submitted map; collects exactly once, through this handle
 - `PreparedMap`: A map set up once in shared memory, run many times
 - `PoolExecutor`: A `concurrent.futures.Executor` over a pymizu pool
@@ -100,7 +100,7 @@ R peers and workers (the mizu R package), neutral task specifications, and the d
 - `launcher`: Return a launcher spawning Python processes running pymizu
 - `r_launcher`: Return a launcher spawning R processes running the `mizu` package
 - `Frame`: A data.frame's Python home: named columns with a row count
-- `DimArray`: An `ndarray` carrying R labels (`names` / `dimnames` /
+- `DimArray`: An `ndarray` carrying R labels for faithful round trips with R
 
 ### Frame Methods
 
@@ -118,7 +118,7 @@ Methods for the Frame class
 
 A full ring, a timeout, a close, or a dead peer returns as a sentinel singleton — FULL / TIMEOUT / CLOSED / PEER_GONE — tested by identity, never raised. Real failures raise exceptions.
 
-- `Sentinel`: Terminal-state sentinel returned by pymizu verbs. Identity-tested against pymizu.FULL / TIMEOUT / CLOSED / PEER_GONE
+- `Sentinel`: A terminal-state sentinel returned by pymizu verbs. Test by identity against pymizu.FULL / TIMEOUT / CLOSED / PEER_GONE
 - `is_sentinel`: is_sentinel(x) -> bool
 - `is_remote_error`: Test whether a received channel value is a remote error
 - `MizuError`: Base class for all pymizu errors
@@ -130,9 +130,9 @@ A full ring, a timeout, a close, or a dead peer returns as a sentinel singleton 
 - `CancelledError`: The task was cancelled before it ran
 - `TaskError`: The task callable raised. Carries 'remote_type' and 'detail' attributes describing the worker-side exception
 - `WorkerDiedError`: The executing worker died mid-task. Carries 'slot' and 'pid' attributes identifying the worker
-- `TaskLostError`: The claimant's read of the task's payload region failed without a death verdict — a vanished or unreadable region, not a dead worker
+- `TaskLostError`: The task's payload region vanished or could not be read before any worker ran it. No worker died
 - `DeclinedError`: A send on a foreign-language channel of a value outside the portable interchange subset. Carries 'path' and 'reason' attributes ('reason' includes the one-line rewrite guidance for the value)
-- `ForeignPayloadError`: A received payload in a language-private or unrecognized format: a peer sent outside the portable interchange subset. The message is consumed, never wedging the ring; the async drain rejects only the head waiter and continues
+- `ForeignPayloadError`: A received payload in a language-private or unrecognized format: the peer sent a value outside the portable interchange subset. The message is consumed, so the ring is never blocked, and under recv_async() only the Future waiting on that message rejects
 - `ConcurrentUseError`: A verb ran concurrently with another verb in the same handle role: each handle role is confined to one thread at a time (libmizu 'Handle threading')
 
 ### Housekeeping

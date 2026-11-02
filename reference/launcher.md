@@ -4,7 +4,7 @@ Return a launcher spawning Python processes running pymizu.
 
 Usage
 
-[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L88-L142)
+[Source](https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L88-L141)
 
 ``` python
 launcher(
@@ -15,7 +15,7 @@ launcher(
 )
 ```
 
-[`Channel.create()`](../reference/Channel.create.md#pymizu.Channel.create) calls it with `token` alone to spawn the peer; [`Pool.create()`](../reference/Pool.create.md#pymizu.Pool.create) calls it with `token` and `slot` to spawn each worker. The process runs `python -m pymizu.child <token>` or `python -m pymizu.worker <token> <slot>`. This is the default of every `launcher=` argument; the mirror of the R package's `mizu_launcher()`.
+[`Channel.create()`](../reference/Channel.create.md#pymizu.Channel.create) calls it with `token` alone to spawn the peer; [`Pool.create()`](../reference/Pool.create.md#pymizu.Pool.create) calls it with `token` and `slot` to spawn each worker. The process runs `python -m pymizu.child <token>` or `python -m pymizu.worker <token> <slot>`. This is the default of every `launcher=` argument, and the counterpart of the R package's `mizu_launcher()`.
 
 ## Parameters
 

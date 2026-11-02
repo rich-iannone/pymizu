@@ -8,4 +8,4 @@ Usage
 Task.cancel()
 ```
 
-Advisory only, never interrupts: a queued task is skipped; a running one completes and its result is dropped. True when this call cancelled the task; False in every other case.
+Advisory only, and never interrupts: a queued task is skipped, and a running one completes with its result dropped. Returns True when this call cancelled the task, False in every other case.

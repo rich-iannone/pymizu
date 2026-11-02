@@ -822,7 +822,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div class="doc-usage-source">
 <p>Usage</p>
-<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_map.py#L2014-L2365" target="_blank" rel="noopener">Source</a></p>
+<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_map.py#L2012-L2363" target="_blank" rel="noopener">Source</a></p>
 </div>
 <div class="doc-signature doc-class">
 <div class="sourceCode" id="cb1"><pre class="sourceCode pythonsignature"><code class="sourceCode pythonsignature"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">PreparedMap</span>(</span>
@@ -850,7 +850,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </dd>
 <dt><code><span class="doc-parameter-name">fn</span><span class="doc-parameter-annotation-sep">:</span> <span class="doc-parameter-annotation">_Callable[…, _Any]</span></code></dt>
 <dd>
-<p>The function to map, or a <a href="../reference/call.html#pymizu.call" class="gdls-link"><code>call</code></a> spec — as for <a href="../reference/Pool.map.html#pymizu.Pool.map" class="gdls-link"><code>Pool.map()</code></a>.</p>
+<p>The function to map, or a <a href="../reference/call.html#pymizu.call" class="gdls-link"><code>call</code></a> spec, as for <a href="../reference/Pool.map.html#pymizu.Pool.map" class="gdls-link"><code>Pool.map()</code></a>.</p>
 </dd>
 <dt><code><span class="doc-parameter-name">x</span><span class="doc-parameter-annotation-sep">:</span> <span class="doc-parameter-annotation">_Any</span></code></dt>
 <dd>
@@ -870,11 +870,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </dd>
 <dt><code><span class="doc-parameter-name">template</span><span class="doc-parameter-annotation-sep">:</span> <span class="doc-parameter-annotation">_Any</span> <span class="doc-parameter-default-sep op">=</span> <span class="doc-parameter-default">None</span></code></dt>
 <dd>
-<p>An example buffer declaring each result’s dtype and length — as for <a href="../reference/Pool.map.html#pymizu.Pool.map" class="gdls-link"><code>Pool.map()</code></a>.</p>
+<p>An example buffer declaring each result’s dtype and length, as for <a href="../reference/Pool.map.html#pymizu.Pool.map" class="gdls-link"><code>Pool.map()</code></a>.</p>
 </dd>
 <dt><code><span class="doc-parameter-name">stream</span><span class="doc-parameter-annotation-sep">:</span> <span class="doc-parameter-annotation">bool</span> <span class="doc-parameter-default-sep op">=</span> <span class="doc-parameter-default"><span class="va">False</span></span></code></dt>
 <dd>
-Stream slices of <code>x</code> instead of writing it to shared memory whole — as for <a href="../reference/Pool.map.html#pymizu.Pool.map" class="gdls-link"><code>Pool.map()</code></a>. The map is set up here; <code>seed</code> and <code>collect</code> are per-run options of <a href="../reference/PreparedMap.html#pymizu.PreparedMap.run" class="gdls-link"><code>PreparedMap.run()</code></a> (mirroring mizu’s <code>mizu_map_run()</code>).
+Stream slices of <code>x</code> instead of writing it to shared memory whole, as for <a href="../reference/Pool.map.html#pymizu.Pool.map" class="gdls-link"><code>Pool.map()</code></a>. The map is set up here; <code>seed</code> and <code>collect</code> are per-run options of <a href="../reference/PreparedMap.html#pymizu.PreparedMap.run" class="gdls-link"><code>PreparedMap.run()</code></a> (mirroring mizu’s <code>mizu_map_run()</code>).
 </dd>
 </dl>
 </div>
@@ -882,7 +882,7 @@ Stream slices of <code>x</code> instead of writing it to shared memory whole —
 <section id="examples" class="level2 doc-examples">
 <h2 class="doc-examples anchored" data-anchor-id="examples">Examples</h2>
 <p>Set the map up once, then re-run it over replacement data at copy cost (same dtype and length swap in place):</p>
-<div id="e00c67d4" class="cell" data-execution_count="1">
+<div id="df2d3787" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pymizu</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -910,7 +910,7 @@ Stream slices of <code>x</code> instead of writing it to shared memory whole —
 <tbody>
 <tr class="odd">
 <td><a href="#close" class="doc-function doc-label doc-label-method">close()</a></td>
-<td>Unlink the staged region (idempotent; the GC backstop is the</td>
+<td>Release the staged shared memory.</td>
 </tr>
 <tr class="even">
 <td><a href="#run" class="doc-function doc-label doc-label-method">run()</a></td>
@@ -921,17 +921,17 @@ Stream slices of <code>x</code> instead of writing it to shared memory whole —
 <section id="close" class="level3">
 <h3 class="anchored" data-anchor-id="close"><span class="doc-object-name doc-function doc-label doc-label-method">close()</span></h3>
 <div class="doc-subject">
-<p>Unlink the staged region (idempotent; the GC backstop is the</p>
+<p>Release the staged shared memory.</p>
 </div>
 <div class="doc-usage-source">
 <p>Usage</p>
-<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_map.py#L2349-L2355" target="_blank" rel="noopener">Source</a></p>
+<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_map.py#L2344-L2353" target="_blank" rel="noopener">Source</a></p>
 </div>
 <div class="doc-signature doc-function">
 <div class="sourceCode" id="cb4"><pre class="sourceCode pythonsignature"><code class="sourceCode pythonsignature"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">close</span>()</span></code></pre></div>
 </div>
 <div class="doc-text">
-<p>capsule destructor).</p>
+<p>Safe to call more than once; garbage collection releases it otherwise.</p>
 </div>
 </section>
 <section id="run" class="level3">
@@ -941,7 +941,7 @@ Stream slices of <code>x</code> instead of writing it to shared memory whole —
 </div>
 <div class="doc-usage-source">
 <p>Usage</p>
-<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_map.py#L2224-L2347" target="_blank" rel="noopener">Source</a></p>
+<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/_map.py#L2222-L2342" target="_blank" rel="noopener">Source</a></p>
 </div>
 <div class="doc-signature doc-function">
 <div class="sourceCode" id="cb5"><pre class="sourceCode pythonsignature"><code class="sourceCode pythonsignature"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">run</span>(</span>
@@ -958,11 +958,11 @@ Stream slices of <code>x</code> instead of writing it to shared memory whole —
 <dl>
 <dt><code><span class="doc-parameter-name">x</span><span class="doc-parameter-annotation-sep">:</span> <span class="doc-parameter-annotation">_Any</span> <span class="doc-parameter-default-sep op">=</span> <span class="doc-parameter-default">None</span></code></dt>
 <dd>
-<p>Replaces the staged data for this and later runs. When both the staged and the replacement x are arrays of the same dtype and length, the swap is an in-place copy — a loop that iterates over same-shaped data (optimizer steps, simulation sweeps) runs at copy cost, skipping the region creation and the worker-side set-up. Any other x is staged fresh on this run.</p>
+<p>Replaces the staged data for this and later runs. When both the staged and the replacement x are arrays of the same dtype and length, the swap is an in-place copy, so a loop over same-shaped data (optimizer steps, simulation sweeps) runs at copy cost, skipping the region creation and the worker-side set-up. Any other x is staged fresh on this run.</p>
 </dd>
 <dt><code><span class="doc-parameter-name">seed</span><span class="doc-parameter-annotation-sep">:</span> <span class="doc-parameter-annotation">int | bytes | bytearray | tuple[int | bytes | bytearray, int] | None</span> <span class="doc-parameter-default-sep op">=</span> <span class="doc-parameter-default">None</span></code></dt>
 <dd>
-<p>Deterministic per-element seeding for this run, as for <a href="../reference/Pool.map.html#pymizu.Pool.map" class="gdls-link"><code>Pool.map()</code></a>; <code>None</code> (the default) runs unseeded. The seed travels with the run’s tasks, not the staged data, so reseeding a run is free — the repeated-simulation loop varies <code>seed</code> per run while the set-up is paid once.</p>
+<p>Deterministic per-element seeding for this run, as for <a href="../reference/Pool.map.html#pymizu.Pool.map" class="gdls-link"><code>Pool.map()</code></a>; <code>None</code> (the default) runs unseeded. The seed travels with the run’s tasks, not the staged data, so reseeding a run costs nothing extra: a repeated-simulation loop varies <code>seed</code> per run while the set-up is paid once.</p>
 </dd>
 <dt><code><span class="doc-parameter-name">timeout</span><span class="doc-parameter-annotation-sep">:</span> <span class="doc-parameter-annotation">float | None</span> <span class="doc-parameter-default-sep op">=</span> <span class="doc-parameter-default">None</span></code></dt>
 <dd>
@@ -970,7 +970,7 @@ Stream slices of <code>x</code> instead of writing it to shared memory whole —
 </dd>
 <dt><code><span class="doc-parameter-name">collect</span><span class="doc-parameter-annotation-sep">:</span> <span class="doc-parameter-annotation">str | None</span> <span class="doc-parameter-default-sep op">=</span> <span class="doc-parameter-default">None</span></code></dt>
 <dd>
-<code>"copy"</code> (the default) or <code>"view"</code>, which requires <code>template</code> — as for <a href="../reference/Pool.map.html#pymizu.Pool.map" class="gdls-link"><code>Pool.map()</code></a>. The choice is per run.
+<code>"copy"</code> (the default) or <code>"view"</code>, which requires <code>template</code>, as for <a href="../reference/Pool.map.html#pymizu.Pool.map" class="gdls-link"><code>Pool.map()</code></a>. The choice is per run.
 </dd>
 </dl>
 </div>
@@ -979,9 +979,9 @@ Stream slices of <code>x</code> instead of writing it to shared memory whole —
 <h4 class="doc-returns anchored" data-anchor-id="returns">Returns</h4>
 <div class="doc-definition-items">
 <dl>
-<dt><code> <span class="doc-parameter-annotation">The run’s map handle — collected exactly once, by</span></code></dt>
+<dt><code> <span class="doc-parameter-annotation">The run’s map handle, collected exactly once, by <code>collect()</code></span></code></dt>
 <dd>
-<code>collect()</code> (blocking) or <code>collect_async()</code> (event-driven). A run is a producer on the pool handle: a concurrent run or submit from a second thread raises <a href="../reference/ConcurrentUseError.html#pymizu.ConcurrentUseError" class="gdls-link gdls-code">ConcurrentUseError</a>. A clean value collect keeps the set-up for the next run; a view collect hands the region to the view, and an interrupted run (timeout, an error, a worker death) drops it — the next run stages a fresh one either way.
+(blocking) or <code>collect_async()</code> (event-driven). A run is a producer on the pool handle: a concurrent run or submit from a second thread raises <a href="../reference/ConcurrentUseError.html#pymizu.ConcurrentUseError" class="gdls-link gdls-code">ConcurrentUseError</a>. A clean value collect keeps the set-up for the next run. A view collect hands the region to the view, and an interrupted run (timeout, an error, a worker death) drops it, so the next run stages a fresh one either way.
 </dd>
 </dl>
 </div>

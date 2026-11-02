@@ -33,7 +33,7 @@ To spawn the peer differently, write your own launcher: one callable that takes 
 
 ## Large data crosses without copying
 
-Past a size threshold, the data itself never moves. pymizu writes it to shared memory once, and both sides read it in place: no serialization, no parsing, no further copies. A large value you send is read by R directly over the shared pages. A large value you receive arrives as a view over those pages, usually wrapped as a numpy array. The peer below echoes back whatever it receives. This channel stays open for the next few examples:
+Above a size threshold, pymizu writes the data to shared memory once and both sides read it in place. Nothing is serialized, parsed, or copied again. A large value you send is read by R directly over the shared pages. A large value you receive arrives as a view over those pages, usually wrapped as a numpy array. The peer below echoes back whatever it receives. This channel stays open for the next few examples:
 
 ``` python
 ch = pymizu.Channel.create(
@@ -54,13 +54,13 @@ back = ch.recv(timeout=5)
 np.array_equal(back, big)                              # True
 ```
 
-Apart from that one write into the shared region, nothing moved at all. R's echo came back as a reference with zero payload bytes. If you send a received view onward, it crosses the same way: as the region's name alone. Zero-copy covers every large layout: a flat array of an exact-match dtype (`float64`, `int32`, `int64`, `complex128`, `uint8`), an array of any shape and memory order, or a nested tree of lists, dicts, arrays, and strings. A `datetime64` array crosses the same way, with `NaT` as `NA`, and a `list[str | None]` with `None` as `NA`. A large data frame crosses as one shared region in both directions. The floor is low: 256 KB for a flat contiguous array on a channel, and 32 KB everywhere else.[^1]
+Apart from the one write into the shared region, no data moved. R's echo came back as a reference, with no payload bytes. If you send a received view onward, it crosses the same way, as the region's name alone. Zero-copy covers every large layout: a flat array of an exact-match dtype (`float64`, `int32`, `int64`, `complex128`, `uint8`), an array of any shape and memory order, or a nested tree of lists, dicts, arrays, and strings. A `datetime64` array crosses the same way, with `NaT` as `NA`, and a `list[str | None]` with `None` as `NA`. A large data frame crosses as one shared region in both directions. The floor is 256 KB for a flat contiguous array on a channel, and 32 KB everywhere else.[^1]
 
-Arrays of other numeric dtypes (booleans, the narrow ints, `uint64`, `float32`, …) cross as a converted copy at any size. The [dtype matrix](#the-dtype-matrix) has the per-dtype rule. Without numpy, a received view is a plain buffer: `memoryview(view)` works, and `pa.array(view)` or `pl.from_arrow(view)` wrap the same pages without copying. One exception: R's ALTREP vectors (say, `1:1e9`, stored as a recipe rather than data) cross by value, values exact. A polars or pyarrow object that wraps a received frame keeps the frame's region alive until garbage collection, so delete these wrappers when you no longer need them.
+Arrays of other numeric dtypes (booleans, the narrow ints, `uint64`, `float32`, …) cross as a converted copy at any size. The [dtype matrix](#the-dtype-matrix) has the per-dtype rule. Without numpy, a received view is a plain buffer: `memoryview(view)` works, and `pa.array(view)` or `pl.from_arrow(view)` wrap the same pages without copying. One exception: R's ALTREP vectors (such as `1:1e9`, stored as a recipe rather than data) cross by value, with values exact. A polars or pyarrow object that wraps a received frame keeps the frame's region alive until garbage collection, so delete these wrappers when you no longer need them.
 
 ## What crosses
 
-Small values round-trip just as exactly. Each form below comes back from R unchanged:
+Small values round-trip exactly too. Each form below comes back from R unchanged:
 
 ``` python
 def echo(x):
@@ -96,7 +96,7 @@ R sees the natural equivalent throughout: a vector for an array, a factor for a 
 
 ## What doesn't cross
 
-Some values have no portable home on the other side. `pymizu` declines these at send time with a [DeclinedError](../reference/DeclinedError.md#pymizu.DeclinedError) (a subclass of `TypeError`) that names the offending value, carried on its `path` and `reason` attributes. The channel stays usable:
+Some values have no equivalent on the other side. pymizu declines them at send time with a [DeclinedError](../reference/DeclinedError.md#pymizu.DeclinedError) (a subclass of `TypeError`) that names the offending value on its `path` and `reason` attributes. The channel stays usable:
 
 ``` python
 import decimal
@@ -116,7 +116,7 @@ From Python, also declined: Arrow nested, `date64`, `time`, and `interval` colum
 
 From R: a `POSIXlt` time, a character matrix, and S4 objects stay on R's side. So does a named vector with a class or of character type (a named character vector, factor, `Date`, or `POSIXct`), since names travel only on the plain atomic vectors. Among data frames: a data.table, a groupedData-style frame (a formula attribute), and a column that is itself a labeled matrix.
 
-The mirror image of the send-time decline is a value that arrives in a language-private format -- one no send gate caught (an attach race, or a misbehaving or version-skewed peer). The read raises [`ForeignPayloadError`](../reference/ForeignPayloadError.md#pymizu.ForeignPayloadError) and the message is consumed, so one bad payload never wedges the channel; under [recv_async()](../reference/Channel.recv_async.md#pymizu.Channel.recv_async) only that message's waiter rejects and the async consumer keeps flowing.
+The counterpart of the send-time decline is a value that arrives in a language-private format that no send gate caught (an attach race, or a misbehaving or version-skewed peer). The read raises [`ForeignPayloadError`](../reference/ForeignPayloadError.md#pymizu.ForeignPayloadError) and the message is consumed, so one bad payload never blocks the channel. Under [recv_async()](../reference/Channel.recv_async.md#pymizu.Channel.recv_async) only that message's waiter rejects, and the async consumer keeps flowing.
 
 ## pymizu.Frame
 
@@ -147,7 +147,7 @@ pool.stop()
 
 Unnamed arguments become positional arguments, and keyword arguments become named ones, matching R's calling convention. A `source=` task runs in a fresh environment with the keyword arguments bound as names and the positional arguments bound as `_1`, `_2`, … The result is the value of the last expression.
 
-On an R-worker pool, submitting a plain Python callable raises an error naming [pymizu.call()](../reference/call.md#pymizu.call). Task errors cross as [TaskError](../reference/TaskError.md#pymizu.TaskError) with the R error type preserved in `remote_type`. Arguments follow the same rules as channel payloads, zero-copy included: a large array crosses as one shared view, and an array that is already a received view crosses as its name alone. A pool's workers all run one language: mixing R and Python workers in one pool is not supported. The reverse direction mirrors this: `mizu::mizu_pool()` with `mizu::mizu_py_launcher()`, and `mizu::mizu_submit_call()` with `mizu::mizu_call()` specs.
+On an R-worker pool, submitting a plain Python callable raises an error naming [pymizu.call()](../reference/call.md#pymizu.call). Task errors cross as [TaskError](../reference/TaskError.md#pymizu.TaskError) with the R error type preserved in `remote_type`. Arguments follow the same rules as channel payloads, zero-copy included: a large array crosses as one shared view, and an array that is already a received view crosses as its name alone. A pool's workers all run one language: mixing R and Python workers in one pool is not supported. The reverse direction works the same way: `mizu::mizu_pool()` with `mizu::mizu_py_launcher()`, and `mizu::mizu_submit_call()` with `mizu::mizu_call()` specs.
 
 ## Mapping over a foreign pool
 
@@ -227,4 +227,4 @@ Round trips are stable after the first hop, and a pass-through echo is bit-exact
 
 Between two Python processes, on a channel or a pool, the conversions on this page never run. The exact-match dtypes cross unchanged, and everything else pickles. An exact Python-to-Python send of a non-identity dtype needs no work. They apply only when the other end runs R.
 
-[^1]: Below the floor, a value crosses as one quick copy. At any size, these types cross: Python scalars (`bool`, `int`, `float`, `complex`, `str`, `None`), lists, dicts with `str` keys (a tuple arrives as a `list` in R), `bytes` (an R raw vector), and `datetime.date` / `datetime.datetime` scalars (length-1 dates and times in R). A few round trips change the container but never the values. A standalone R factor comes back as strings, a length-1 `NA` arrives as `None` and sent back is R's `NULL`, and an R logical vector with `NA`s comes back as integer. A `POSIXct` timezone normalizes to UTC (the instant is exact), and `difftime` units normalize to seconds. The bit patterns `-2147483648` (int32) and `-9223372036854775808` (int64) collide with R's own `NA` sentinels and read as `NA` in R. A `uint64` up to 2^63 - 1 converts exactly to `integer64`; past that it crosses as `NA` with a warning at send.
+[^1]: Below the floor, a value crosses as one quick copy. At any size, these types cross: Python scalars (`bool`, `int`, `float`, `complex`, `str`, `None`), lists, dicts with `str` keys (a tuple arrives as a `list` in R), `bytes` (an R raw vector), and `datetime.date` / `datetime.datetime` scalars (length-1 dates and times in R). A few round trips change the container but not the values. A standalone R factor comes back as strings, a length-1 `NA` arrives as `None` and sent back is R's `NULL`, and an R logical vector with `NA`s comes back as integer. A `POSIXct` timezone normalizes to UTC (the instant is exact), and `difftime` units normalize to seconds. The bit patterns `-2147483648` (int32) and `-9223372036854775808` (int64) collide with R's own `NA` sentinels and read as `NA` in R. A `uint64` up to 2^63 - 1 converts exactly to `integer64`; past that it crosses as `NA` with a warning at send.

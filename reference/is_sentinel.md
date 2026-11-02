@@ -8,4 +8,4 @@ Usage
 is_sentinel(object)
 ```
 
-Provenance, not shape: True only for the exact sentinel singletons this process's verbs return, so a look-alike payload never passes.
+True only for the exact sentinel singletons this process's verbs return, so a look-alike payload never passes. The test is identity, not class.

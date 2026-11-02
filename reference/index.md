@@ -21,25 +21,25 @@ The join token for the peer's attach.
 Send one value.
 
 [Channel.send_batch()](Channel.send_batch.md#pymizu.Channel.send_batch)  
-Send several values in one call; return the number accepted
+Send several values in one call.
 
 [Channel.recv()](Channel.recv.md#pymizu.Channel.recv)  
 Receive one value.
 
 [Channel.recv_async()](Channel.recv_async.md#pymizu.Channel.recv_async)  
-The event-driven receive: an `asyncio.Future` for the next
+Receive the next value as an `asyncio.Future`.
 
 [Channel.\_\_aiter\_\_()](Channel.__aiter__.md#pymizu.Channel.__aiter__)  
-Iterate over received payloads until CLOSED or PEER_GONE --
+Iterate over received payloads until CLOSED or PEER_GONE.
 
 [Channel.recv_batch()](Channel.recv_batch.md#pymizu.Channel.recv_batch)  
-Receive up to `n` values in one call; a list (possibly
+Receive up to `n` values in one call.
 
 [Channel.close()](Channel.close.md#pymizu.Channel.close)  
-Orderly close: tell the peer to close and wait up to
+Close the channel in an orderly way.
 
 [Channel.destroy()](Channel.destroy.md#pymizu.Channel.destroy)  
-Tear down the handle immediately, without the close
+Tear down the handle immediately, without the close handshake.
 
 [Channel.alive()](Channel.alive.md#pymizu.Channel.alive)  
 True while the peer process is alive.
@@ -62,7 +62,7 @@ A set of worker processes that divide submitted tasks among themselves.
 A shared-memory work-stealing task pool handle (process-private).
 
 [Task](Task.md#pymizu.Task)  
-A task handle from Pool.submit(). Collected exactly once; an uncollected handle's finalizer releases its slot.
+A task handle from Pool.submit(). It is collected exactly once, and an uncollected handle releases its slot when garbage collected.
 
 [Map](Map.md#pymizu.Map)  
 A staged, submitted map; collects exactly once, through this handle.
@@ -90,7 +90,7 @@ The join token for worker/submitter attach.
 Submit `fn(*args, **kwargs)` as a task; return a Task handle.
 
 [Pool.submit_batch()](Pool.submit_batch.md#pymizu.Pool.submit_batch)  
-Submit one task per zero-arg callable in `fns` in one
+Submit one task per zero-arg callable in `fns` in one call.
 
 [Pool.collect_any()](Pool.collect_any.md#pymizu.Pool.collect_any)  
 Wait on several tasks.
@@ -99,10 +99,10 @@ Wait on several tasks.
 Wait until every task is terminal.
 
 [Pool.collect_any_async()](Pool.collect_any_async.md#pymizu.Pool.collect_any_async)  
-The event-driven [`collect_any()`](../reference/Pool.collect_any.md#pymizu.Pool.collect_any):
+The event-driven [`collect_any()`](../reference/Pool.collect_any.md#pymizu.Pool.collect_any).
 
 [Pool.collect_all_async()](Pool.collect_all_async.md#pymizu.Pool.collect_all_async)  
-The event-driven [`collect_all()`](../reference/Pool.collect_all.md#pymizu.Pool.collect_all):
+The event-driven [`collect_all()`](../reference/Pool.collect_all.md#pymizu.Pool.collect_all).
 
 [Pool.map()](Pool.map.md#pymizu.Pool.map)  
 Map `fn` over `x` on the pool; return a map handle.
@@ -114,28 +114,28 @@ Map `fn` over `x`, unpacking each element as call arguments.
 Stage a map once for repeated runs; return a [PreparedMap](../reference/PreparedMap.md#pymizu.PreparedMap).
 
 [Pool.retire()](Pool.retire.md#pymizu.Pool.retire)  
-Ask the worker in `slot` to exit cleanly (non-blocking,
+Ask the worker in `slot` to exit cleanly.
 
 [Pool.spawn_workers()](Pool.spawn_workers.md#pymizu.Pool.spawn_workers)  
-Spawn `n` additional workers and wait for them to join
+Spawn `n` additional workers and wait for them to join.
 
 [Pool.stop()](Pool.stop.md#pymizu.Pool.stop)  
 Orderly shutdown (controller only).
 
 [Pool.destroy()](Pool.destroy.md#pymizu.Pool.destroy)  
-Tear down the pool handle immediately, without telling the
+Tear down the pool handle immediately, without waiting.
 
 [Pool.info()](Pool.info.md#pymizu.Pool.info)  
-A read-only snapshot of the pool's state (dict), including
+A read-only snapshot of the pool's state (dict).
 
 [Pool.dump()](Pool.dump.md#pymizu.Pool.dump)  
 A read-only debugging snapshot of the whole pool region (dict).
 
 [Pool.stats()](Pool.stats.md#pymizu.Pool.stats)  
-Cumulative per-worker and per-submitter counters since each
+Cumulative per-worker and per-submitter counters.
 
 [Pool.trace()](Pool.trace.md#pymizu.Pool.trace)  
-Register a hook called as `fn(event, id)` at each task
+Register a hook called as `fn(event, id)` at each task event.
 
 [Pool.\_\_enter\_\_()](Pool.__enter__.md#pymizu.Pool.__enter__)  
 
@@ -178,7 +178,7 @@ Return a launcher spawning R processes running the `mizu` package.
 A data.frame's Python home: named columns with a row count.
 
 [DimArray](DimArray.md#pymizu.DimArray)  
-An `ndarray` carrying R labels ([names](../reference/Frame.names.md#pymizu.Frame.names) / `dimnames` /
+An `ndarray` carrying R labels for faithful round trips with R.
 
 ## Frame Methods
 
@@ -207,7 +207,7 @@ Return len(self).
 A full ring, a timeout, a close, or a dead peer returns as a sentinel singleton -- FULL / TIMEOUT / CLOSED / PEER_GONE -- tested by identity, never raised. Real failures raise exceptions.
 
 [Sentinel](Sentinel.md#pymizu.Sentinel)  
-Terminal-state sentinel returned by pymizu verbs. Identity-tested against pymizu.FULL / TIMEOUT / CLOSED / PEER_GONE.
+A terminal-state sentinel returned by pymizu verbs. Test by identity against pymizu.FULL / TIMEOUT / CLOSED / PEER_GONE.
 
 [is_sentinel()](is_sentinel.md#pymizu.is_sentinel)  
 is_sentinel(x) -\> bool
@@ -243,13 +243,13 @@ The task callable raised. Carries 'remote_type' and 'detail' attributes describi
 The executing worker died mid-task. Carries 'slot' and 'pid' attributes identifying the worker.
 
 [TaskLostError](TaskLostError.md#pymizu.TaskLostError)  
-The claimant's read of the task's payload region failed without a death verdict -- a vanished or unreadable region, not a dead worker.
+The task's payload region vanished or could not be read before any worker ran it. No worker died.
 
 [DeclinedError](DeclinedError.md#pymizu.DeclinedError)  
 A send on a foreign-language channel of a value outside the portable interchange subset. Carries 'path' and 'reason' attributes ('reason' includes the one-line rewrite guidance for the value).
 
 [ForeignPayloadError](ForeignPayloadError.md#pymizu.ForeignPayloadError)  
-A received payload in a language-private or unrecognized format: a peer sent outside the portable interchange subset. The message is consumed, never wedging the ring; the async drain rejects only the head waiter and continues.
+A received payload in a language-private or unrecognized format: the peer sent a value outside the portable interchange subset. The message is consumed, so the ring is never blocked, and under recv_async() only the Future waiting on that message rejects.
 
 [ConcurrentUseError](ConcurrentUseError.md#pymizu.ConcurrentUseError)  
 A verb ran concurrently with another verb in the same handle role: each handle role is confined to one thread at a time (libmizu 'Handle threading').

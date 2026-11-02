@@ -8,7 +8,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Iterate over received payloads until CLOSED or PEER_GONE —">
+<meta name="description" content="Iterate over received payloads until CLOSED or PEER_GONE.">
 
 <title>Channel.__aiter__() | pymizu</title>
 <script type="application/ld+json">[{"@context": "https://schema.org", "@type": "SoftwareSourceCode", "name": "pymizu", "description": "Async and parallel Python at thread speed over shared memory", "codeRepository": "https://github.com/shikokuchuo/pymizu", "license": "https://opensource.org/licenses/MIT", "url": "https://shikokuchuo.net/pymizu", "documentation": "https://shikokuchuo.net/pymizu", "programmingLanguage": {"@type": "ComputerLanguage", "name": "Python"}}, {"@context": "https://schema.org", "@type": "WebPage", "name": "Channel.__aiter__ - pymizu", "isPartOf": {"@type": "WebSite", "name": "pymizu"}, "url": "https://shikokuchuo.net/pymizu/reference/Channel.__aiter__.html"}]</script>
@@ -134,11 +134,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <meta property="og:title" content="Channel.__aiter__() | pymizu">
-<meta property="og:description" content="Iterate over received payloads until CLOSED or PEER_GONE —">
+<meta property="og:description" content="Iterate over received payloads until CLOSED or PEER_GONE.">
 <meta property="og:image" content="https://shikokuchuo.net/pymizu/assets/og-image.png">
 <meta property="og:site_name" content="pymizu">
 <meta name="twitter:title" content="Channel.__aiter__() | pymizu">
-<meta name="twitter:description" content="Iterate over received payloads until CLOSED or PEER_GONE —">
+<meta name="twitter:description" content="Iterate over received payloads until CLOSED or PEER_GONE.">
 <meta name="twitter:image" content="https://shikokuchuo.net/pymizu/assets/og-image.png">
 <meta name="twitter:card" content="summary_large_image">
 </head>
@@ -806,19 +806,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <div class="doc-subject">
-<p>Iterate over received payloads until CLOSED or PEER_GONE —</p>
+<p>Iterate over received payloads until CLOSED or PEER_GONE.</p>
 </div>
 <div class="doc-usage-source">
 <p>Usage</p>
-<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L394-L416" target="_blank" rel="noopener">Source</a></p>
+<p><a href="https://github.com/shikokuchuo/pymizu/blob/main/python/pymizu/__init__.py#L390-L410" target="_blank" rel="noopener">Source</a></p>
 </div>
 <div class="doc-signature doc-function">
 <div class="sourceCode" id="cb1"><pre class="sourceCode pythonsignature"><code class="sourceCode pythonsignature"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dt">Channel</span><span class="op">.</span><span class="fu">__aiter__</span>()</span></code></pre></div>
 </div>
 <div class="doc-text">
-<p>the async form of the sync iterator.</p>
-<p>Yields payloads as they arrive, awaiting each through <a href="../reference/Channel.recv_async.html#pymizu.Channel.recv_async" class="gdls-link"><code>recv_async()</code></a>. Between iterations nothing is armed; the next iteration re-arms and the arm’s synchronous drain picks up whatever arrived meanwhile (loss-free).</p>
-<p>A declined foreign payload (see <a href="../reference/Channel.recv_async.html#pymizu.Channel.recv_async" class="gdls-link"><code>recv_async()</code></a>) propagates out of the iteration and ends the <code>async for</code> statement — a try/except inside the loop body cannot catch it. To skip one, wrap the whole loop and re-enter on the same channel: the consumer kept flowing, and the new iterator picks up the next message.</p>
+<p>The async form of the sync iterator. Yields payloads as they arrive, awaiting each through <a href="../reference/Channel.recv_async.html#pymizu.Channel.recv_async" class="gdls-link"><code>recv_async()</code></a>. Between iterations nothing is armed; the next iteration re-arms, and the arm’s synchronous drain picks up whatever arrived meanwhile, so nothing is lost.</p>
+<p>A declined foreign payload (see <a href="../reference/Channel.recv_async.html#pymizu.Channel.recv_async" class="gdls-link"><code>recv_async()</code></a>) propagates out of the iteration and ends the <code>async for</code> statement, so a try/except inside the loop body cannot catch it. To skip one, wrap the whole loop and re-enter on the same channel: the consumer kept flowing, and the new iterator picks up the next message.</p>
 </div>
 
 

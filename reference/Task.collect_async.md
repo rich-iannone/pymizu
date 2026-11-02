@@ -8,4 +8,4 @@ Usage
 Task.collect_async()
 ```
 
-The event-driven collect: an asyncio.Future resolving with the task's result (or raising the error collect() raises), resolved when the result arrives -- never blocks, never polls. Cancelling the Future detaches the waiter (a later blocking collect() works again); it never cancels the task -- cancel() stays the explicit verb.
+The event-driven collect: an asyncio.Future that resolves with the task's result (or raises the error collect() raises) when the result arrives, without blocking or polling. Cancelling the Future detaches the waiter, so a later blocking collect() works again, and never cancels the task (only cancel() does).

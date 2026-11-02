@@ -15,7 +15,7 @@ r_launcher(
 )
 ```
 
-[`Channel.create()`](../reference/Channel.create.md#pymizu.Channel.create) calls it with `token` alone to spawn the peer; [`Pool.create()`](../reference/Pool.create.md#pymizu.Pool.create) calls it with `token` and `slot` to spawn each worker. The process runs `rscript` on the package's static child runner with the entry expression (`mizu:::peer_main(<token>)` or `mizu:::worker_main(<token>, <slot>)`) and the detected library paths passed along in argv (without them it cannot `library(mizu)` from the host's libraries). The mirror of the R package's `mizu_py_launcher()`.
+[`Channel.create()`](../reference/Channel.create.md#pymizu.Channel.create) calls it with `token` alone to spawn the peer; [`Pool.create()`](../reference/Pool.create.md#pymizu.Pool.create) calls it with `token` and `slot` to spawn each worker. The process runs `rscript` on the package's static child runner with the entry expression (`mizu:::peer_main(<token>)` or `mizu:::worker_main(<token>, <slot>)`) and the detected library paths passed along in argv (without them it cannot `library(mizu)` from the host's libraries). It is the counterpart of the R package's `mizu_py_launcher()`.
 
 ## Parameters
 
@@ -36,11 +36,11 @@ Forwarded to `subprocess.Popen`.
 ## Raises
 
 `MizuError`  
-Raised here, before anything exists, when Rscript is not found or no installed `mizu` with source string support is available.
+Raised here, before any channel or pool is created, when Rscript is not found or no installed `mizu` with source string support is available.
 
 ## Notes
 
-The first worker's join records the workers' language in the pool, so the launcher carries no language attribute: a pool of R workers takes [`pymizu.call()`](../reference/call.md#pymizu.call) specifications through [`Pool.submit()`](../reference/Pool.submit.md#pymizu.Pool.submit), and a plain callable raises an error naming [call](../reference/call.md#pymizu.call). A launcher that spawns the wrong language fails at join, not at the first task.
+The first worker to join records the workers' language in the pool, so the launcher carries no language attribute. A pool of R workers takes [`pymizu.call()`](../reference/call.md#pymizu.call) specifications through [`Pool.submit()`](../reference/Pool.submit.md#pymizu.Pool.submit), and a plain callable raises an error naming [call](../reference/call.md#pymizu.call). A launcher that spawns the wrong language fails at join, not at the first task.
 
 ## Examples
 

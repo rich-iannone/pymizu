@@ -26,7 +26,7 @@ Against `InterpreterPoolExecutor` (Python 3.14+, subinterpreters with per-interp
 
 ## How pymizu compares
 
-pymizu occupies a specific point in the design space: parallelism across processes on a single machine, with data moving through shared memory instead of serialized copies. The tools in this table overlap at the edges. They differ in what has to run, how data moves, and what survives a crash.
+pymizu targets parallelism across processes on a single machine, with data moving through shared memory instead of serialized copies. The tools in this table overlap at the edges. They differ in what has to run, how data moves, and what survives a crash.
 
 [TABLE]
 
@@ -36,9 +36,9 @@ The stdlib pools are the baseline that the benchmark tables measure.
 
 joblib's `Parallel`/`delayed` is the long-standing answer for an embarrassingly parallel loop over numpy data. Its `loky` backend is the closest in spirit to pymizu: a reusable process pool that memmaps arrays past a size threshold to a temp folder instead of pickling them. That removes the pickle copy. The array still round-trips through the filesystem, and a task round trip stays in the millisecond range.
 
-ipyparallel answers the same question for Jupyter. A controller process brokers pickled messages over ZeroMQ sockets to engine processes. A controller in the loop and socket copies are the price of its generality.
+ipyparallel answers the same question for Jupyter. A controller process brokers pickled messages over ZeroMQ sockets to engine processes. The price of that generality is a controller in the loop and a socket copy per message.
 
-`multiprocessing.shared_memory` exposes raw shared buffers and leaves synchronization, lifetime tracking, and crash cleanup to you. pymizu is that idea finished: the same pages, with the waiting, framing, and peer-death detection built in.
+`multiprocessing.shared_memory` exposes raw shared buffers and leaves synchronization, lifetime tracking, and crash cleanup to you. pymizu builds on the same idea: the same pages, with the waiting, framing, and peer-death detection built in.
 
 ### Distributed frameworks: Ray and Dask
 
@@ -50,12 +50,12 @@ Dask's `distributed` scheduler is similar. Its process-free threaded scheduler s
 
 Python 3.14 officially supports a build with the GIL removed, in which threads share one heap and exchange data with no copies at all. This is the right answer for single-language CPU parallelism when isolation is not needed. A crashing thread takes the process down, C extensions must be built and validated for it, and it does nothing for crossing into R. pymizu targets the standard GIL build and does not yet support the free-threaded one. The two approaches solve different problems: threads trade isolation for sharing, and pymizu keeps the isolation and makes the sharing cheap.
 
-Python 3.14 also added `concurrent.interpreters` to the stdlib ([PEP 734](https://peps.python.org/pep-0734/)). It runs multiple interpreters in one process, each with its own GIL. CPU work parallelizes without new processes on the standard build. Objects that pass between interpreters must be shareable. Builtin scalars and plain containers of them cross as copies. Buffer-protocol objects can share their underlying memory, with synchronization left to you. Anything else, numpy arrays included, is rejected outright. The isolation is real but not OS-level: a fatal error in one interpreter ends the process. The surrounding machinery (queues, lifetimes, crash handling) is yours to build. `concurrent.interpreters` is also Python 3.14 and later only. pymizu runs on Python 3.10 and later.
+Python 3.14 also added `concurrent.interpreters` to the stdlib ([PEP 734](https://peps.python.org/pep-0734/)). It runs multiple interpreters in one process, each with its own GIL. CPU work parallelizes without new processes on the standard build. Objects that pass between interpreters must be shareable. Builtin scalars and plain containers of them cross as copies. Buffer-protocol objects can share their underlying memory, with synchronization left to you. Anything else, numpy arrays included, is rejected. The isolation is real but not OS-level: a fatal error in one interpreter ends the process. The surrounding machinery (queues, lifetimes, crash handling) is yours to build. `concurrent.interpreters` is also Python 3.14 and later only. pymizu runs on Python 3.10 and later.
 
-### The one thing only pymizu does
+### R workers
 
-A pool whose workers are R processes, exchanging numpy arrays and data frames as shared-memory views ([R interop](interop.md)). None of the other tools in this guide cross the language boundary.
+Only pymizu runs a pool whose workers are R processes, exchanging numpy arrays and data frames as shared-memory views (see [R interop](interop.md)). None of the other tools in this guide cross the language boundary.
 
-The short version: choose pymizu when the work fits one machine, when tasks are fine-grained or arrays large, or when R needs to be in the loop. Choose Ray or Dask when you outgrow one machine. Choose `concurrent.interpreters` when you want stdlib-only isolation and can require Python 3.14. Choose free-threading when one language and shared-everything is acceptable.
+Choose pymizu when the work fits on one machine, when tasks are fine-grained or the data is large, or when R needs to be in the loop. Choose Ray or Dask when you outgrow one machine. Choose `concurrent.interpreters` when you want stdlib-only isolation and can require Python 3.14. Choose free-threading when one language and shared-everything is acceptable.
 
-`benchmarks/mizu-bench.py` runs the pymizu rows standalone, `benchmarks/mizu-stdlib-bench.py` the comparison, and `benchmarks/crosslang-map-bench.py` the cross-language map comparison. The scripts are report-only and assert nothing about the numbers: CI runner timing is too variable. Dated records live in `benchmarks/notes.md`.
+`benchmarks/mizu-bench.py` runs the pymizu rows standalone, `benchmarks/mizu-stdlib-bench.py` the comparison, and `benchmarks/crosslang-map-bench.py` the cross-language map comparison. The scripts are report-only and assert nothing about the numbers: CI runner timing is too variable. Dated records are in `benchmarks/notes.md`.

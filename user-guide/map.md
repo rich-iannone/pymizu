@@ -1,6 +1,6 @@
 # Parallel map
 
-`Pool.map(fn, x)` maps `fn` over `x` on the pool and returns a [Map](../reference/Map.md#pymizu.Map) handle immediately -- the work is set up and submitted at the call; collecting happens on the handle. It is not a loop over `pool.submit()`. The function, its constant `args=`/`kwargs=`, and the data are written to shared memory once, and one *runner* task per worker divides up the elements:
+`Pool.map(fn, x)` maps `fn` over `x` on the pool and returns a [Map](../reference/Map.md#pymizu.Map) handle immediately. The work is set up and submitted at the call, and you collect the results from the handle. A map is not a loop over `pool.submit()`. The function, its constant `args=`/`kwargs=`, and the data are written to shared memory once, and one *runner* task per worker divides up the elements:
 
 ``` python
 import pymizu
@@ -17,9 +17,9 @@ result
 
 A map collects exactly once, through the handle:
 
-- `handle.collect(timeout=None)` blocks for the results: a list in input order, or with `template=` the gathered output area (a view with `collect="view"`). On `timeout` expiry the outstanding work is cancelled and the `TIMEOUT` sentinel is returned, never raised.
-- `handle.collect_async()` -- or simply `await handle` -- resolves one `asyncio.Future` with the same results when they arrive, with no blocking or polling. Cancelling the Future only detaches the waiter (the handle collects blocking again); it never cancels the map. A streaming map (`stream=True`) collects blocking only: its sliding task window advances in the blocking collect loop.
-- `handle.cancel()` stops the run: workers halt within about one batch and a pending collect -- blocking or async -- ends with [CancelledError](../reference/CancelledError.md#pymizu.CancelledError).
+- `handle.collect(timeout=None)` blocks for the results: a list in input order, or with `template=` the gathered output area (a view with `collect="view"`). On `timeout` expiry the outstanding work is cancelled and the `TIMEOUT` sentinel is returned, not raised.
+- `handle.collect_async()`, or `await handle`, resolves one `asyncio.Future` with the same results when they arrive, with no blocking or polling. Cancelling the Future only detaches the waiter, so the handle can be collected blocking again, and never cancels the map. A streaming map (`stream=True`) can only be collected blocking, because its sliding task window advances in the blocking collect loop.
+- `handle.cancel()` stops the run: workers halt within about one batch, and a pending collect, blocking or async, ends with [CancelledError](../reference/CancelledError.md#pymizu.CancelledError).
 
 [Pool.map()](../reference/Pool.map.md#pymizu.Pool.map)'s own `timeout=` bounds submission only: on its expiry the tasks already in are cancelled and [Pool.map()](../reference/Pool.map.md#pymizu.Pool.map) itself returns the `TIMEOUT` sentinel (no handle). A dropped uncollected handle cancels at garbage collection, so no run of `fn` is wasted.
 
@@ -62,7 +62,7 @@ result
 
     [1024, 27]
 
-For the multi-iterable shape of `concurrent.futures.Executor.map`, zip the iterables first: `pool.starmap(fn, zip(xs, ys))`. Starmap needs Python workers: a [pymizu.call](../reference/call.md#pymizu.call) spec raises `TypeError`. Everything else (seeding, templates, streaming, the outcomes) is [Pool.map](../reference/Pool.map.md#pymizu.Pool.map)'s.
+For the multi-iterable shape of `concurrent.futures.Executor.map`, zip the iterables first: `pool.starmap(fn, zip(xs, ys))`. Starmap needs Python workers: a [pymizu.call](../reference/call.md#pymizu.call) spec raises `TypeError`. Everything else (seeding, templates, streaming, the outcomes) works as in [Pool.map](../reference/Pool.map.md#pymizu.Pool.map).
 
 ## Reproducible randomness
 
@@ -102,7 +102,7 @@ The legacy `np.random.*` module functions draw from the worker's shared global `
 
 ## Templates
 
-A `template=` example buffer (for example `np.empty(m, dtype=...)`) declares that every `fn` result is `m` values of that dtype. Workers write their results straight into a shared `n x m` output area, so each result crosses the process boundary exactly once, never serialized. Each result must be a matching buffer. If `m == 1`, a plain Python scalar also works:
+A `template=` example buffer (for example `np.empty(m, dtype=...)`) declares that every `fn` result is `m` values of that dtype. Workers write their results directly into a shared `n x m` output area, so each result crosses the process boundary once, without serialization. Each result must be a matching buffer. If `m == 1`, a plain Python scalar also works:
 
 ``` python
 import math
@@ -119,7 +119,7 @@ With a template, `collect="copy"` (the default) returns the output as one numpy 
 
 ## Streaming maps
 
-With `stream=True`, the map never writes the whole of `x` to shared memory: it streams slices of `x` to workers as they take work, and the return value is unchanged. Slices travel as ordinary chunk tasks under a sliding submit/collect window. At most `min(n_chunks, 2 * live workers, free result slots)` tasks stay outstanding. Shared-memory use is bounded by `window x slice` instead of `sizeof(x)`. The chunk count defaults to `min(len(x), 32 * live workers)`, and `n_chunks=` overrides it.
+With `stream=True`, the map does not write the whole of `x` to shared memory. It streams slices of `x` to workers as they take work, and the return value is unchanged. Slices travel as ordinary chunk tasks under a sliding submit/collect window. At most `min(n_chunks, 2 * live workers, free result slots)` tasks stay outstanding. Shared-memory use is bounded by `window x slice` instead of `sizeof(x)`. The chunk count defaults to `min(len(x), 32 * live workers)`, and `n_chunks=` overrides it.
 
 ``` python
 with pymizu.Pool.create(4) as pool:
@@ -130,11 +130,11 @@ result
 
     [5, 4, 3, 2, 1, 0, 1, 2, 3, 4]
 
-Everything else (ordering, `template=` and `collect=`, `seed=` reproducibility, the errors) is exactly the non-streaming map's. Two trade-offs come with fixed chunks. The adaptive batch sizing is lost: raise `n_chunks=` to reduce skew. Slices are serialized like ordinary task payloads, so each chunk pays a submit's serialization cost instead of the zero-copy path a raw array gets. A streaming map with Python workers shares one description of the map with every worker, each read at most once. A [pymizu.call](../reference/call.md#pymizu.call) spec as `fn` streams too, over workers of any language. Each chunk in the window writes a small shared-memory region of its own: the slice plus the task that runs on it, one runner task per chunk. The region is removed as soon as the chunk completes. Shared-memory use stays bounded by the window plus a small per-worker cache rather than by `sizeof(x)`. Each chunk also writes its results separately, so they cannot combine into one view. `collect="view"` raises `TypeError` on a streaming spec map, as does preparing one with `pool.map_prepare()`.
+Everything else (ordering, `template=` and `collect=`, `seed=` reproducibility, the errors) is the same as for the non-streaming map. Fixed chunks have two costs. The adaptive batch sizing is lost: raise `n_chunks=` to reduce skew. Slices are serialized like ordinary task payloads, so each chunk pays a submit's serialization cost instead of the zero-copy path a raw array gets. A streaming map with Python workers shares one description of the map with every worker, each read at most once. A [pymizu.call](../reference/call.md#pymizu.call) spec as `fn` streams too, over workers of any language. Each chunk in the window writes a small shared-memory region of its own: the slice plus the task that runs on it, one runner task per chunk. The region is removed as soon as the chunk completes. Shared-memory use stays bounded by the window plus a small per-worker cache rather than by `sizeof(x)`. Each chunk also writes its results separately, so they cannot combine into one view. `collect="view"` raises `TypeError` on a streaming spec map, as does preparing one with `pool.map_prepare()`.
 
 ## Prepared maps
 
-`pool.map_prepare()` prepares a map once for repeated runs: the data is written to shared memory once, and each worker sets up the map once. Each `m.run()` then returns the run's handle -- costing only the task submissions and the collection -- and reuses each worker's cached set-up:
+`pool.map_prepare()` prepares a map once for repeated runs: the data is written to shared memory once, and each worker sets up the map once. Each `m.run()` then returns the run's handle, costing only the task submissions and the collection, and reuses each worker's cached set-up:
 
 ``` python
 with pymizu.Pool.create(4) as pool:
@@ -146,11 +146,11 @@ with pymizu.Pool.create(4) as pool:
     [5, 4, 3, 2, 1, 0, 1, 2, 3, 4]
     [5, 4, 3, 2, 1, 0, 1, 2, 3, 4]
 
-`m.run(x=...)` replaces the data for that and later runs. A raw-array replacement of the same dtype and length is copied over the old data in place. Any other replacement is written out fresh. A streaming prepared map keeps `x` on the submitter, so a replacement of any shape re-slices. Only a length change under `template=` uses fresh shared memory. After a run collected with `collect="view"`, the next run uses fresh shared memory, because the previous output area belongs to the returned view. `m.run(seed=...)` reseeds the run's element streams, and `m.run(collect=...)` chooses the result form: both are per-run options -- the seed travels with the run's tasks, not the staged data.
+`m.run(x=...)` replaces the data for that and later runs. A raw-array replacement of the same dtype and length is copied over the old data in place. Any other replacement is written out fresh. A streaming prepared map keeps `x` on the submitter, so a replacement of any shape re-slices. Only a length change under `template=` uses fresh shared memory. After a run collected with `collect="view"`, the next run uses fresh shared memory, because the previous output area belongs to the returned view. `m.run(seed=...)` reseeds the run's element streams, and `m.run(collect=...)` chooses the result form. Both are per-run options, because the seed travels with the run's tasks rather than the staged data.
 
 ## Nested maps
 
-A map can nest: a task can start a map on the pool handle of the worker running it, via [pymizu.current_pool()](../reference/current_pool.md#pymizu.current_pool). The runner submissions go straight onto the worker's own queue, and while the worker waits it runs its own runners while idle workers steal the rest: nested maps never deadlock the pool.
+Maps nest: a task can start a map on the pool handle of the worker running it, via [pymizu.current_pool()](../reference/current_pool.md#pymizu.current_pool). The runner submissions go onto the worker's own queue, and while the worker waits it runs its own runners as idle workers steal the rest, so a nested map cannot deadlock the pool.
 
 ``` python
 def nested_total(parts):
@@ -174,7 +174,7 @@ The first nested map of a worker claims a submitter slot. With the default `max_
 
 - An error raised by `fn` re-raises as [pymizu.TaskError](../reference/TaskError.md#pymizu.TaskError) carrying the failing element's 0-based `index`. The map fails fast: the workers stop within about one batch.
 - Worker death raises [pymizu.WorkerDiedError](../reference/WorkerDiedError.md#pymizu.WorkerDiedError) carrying the lost element ranges as `lost` (0-based half-open `(lo, hi)` pairs, possibly wider than what was lost).
-- On `timeout=` expiry the outstanding work is cancelled and the `pymizu.TIMEOUT` sentinel is returned, never raised.
+- On `timeout=` expiry the outstanding work is cancelled and the `pymizu.TIMEOUT` sentinel is returned, not raised.
 - Ctrl-C during a map cancels its outstanding tasks.
 
 A map started inside a task runs on the worker's own pool handle, via [pymizu.current_pool()](../reference/current_pool.md#pymizu.current_pool). A [pymizu.call](../reference/call.md#pymizu.call) spec as `fn` is the cross-language map. See [R interop](interop.md#mapping-over-a-foreign-pool).
