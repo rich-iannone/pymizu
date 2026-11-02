@@ -2,7 +2,7 @@
 
 ![pymizu logo](assets/logo.svg) ![pymizu logo](assets/logo-dark.svg)
 
-Async and parallel Python at thread speed over shared memory
+Async and parallel Python at thread speed over shared memory.
 
 Task round trips drop from ~100 µs over sockets to \< 1 µs, fast enough to parallelize work at thread granularity (see [Benchmarks](#benchmarks)). Common data structures like lists, dicts, numpy arrays, and Arrow tables can be shared between Python and R as zero-copy views.
 
@@ -13,10 +13,10 @@ Channels and work-stealing task pools run over POSIX shared memory (Linux, macOS
 pymizu is built on [libmizu](https://github.com/shikokuchuo/libmizu), a C library for lock-free shared-memory IPC. [mizu](https://github.com/shikokuchuo/mizu) binds the same core for R, so Python and R can talk to each other.
 
 - Zero-copy numpy arrays and Arrow interchange (pyarrow, polars, pandas, duckdb)
-- Drop-in `concurrent.futures.Executor`: real `Future`s, `wait`, `as_completed`, `asyncio.wrap_future`
-- Event-driven asyncio: `await` tasks and maps, `async for` and [recv_async()](./reference/Channel.recv_async.md#pymizu.Channel.recv_async) on channels, with wake-ups as data arrives and no polling threads
-- Reproducible parallel random numbers (`seed=`): identical results for any worker count or steal order
-- Nested parallel maps: a task can map over its own pool, deadlock-free
+- Drop-in `concurrent.futures.Executor` -- real `Future`s, `wait`, `as_completed`, `asyncio.wrap_future`
+- Event-driven asyncio -- `await` tasks and maps, `async for` and [recv_async()](./reference/Channel.recv_async.md#pymizu.Channel.recv_async) on channels -- wake-ups as data arrives, no polling threads
+- Reproducible parallel random numbers (`seed=`) -- identical results for any worker count or steal order
+- Nested parallel maps -- a task can map over its own pool, deadlock-free
 
 > **Pre-release.** The API is not yet stable and we may make changes in response to feedback.
 
@@ -124,9 +124,9 @@ The mizu README shows the reverse direction: an R host that drives Python worker
 
 ### Where next
 
-- [Benchmarks](user-guide/benchmarks.md): overhead against the stdlib pools, and how pymizu compares with other frameworks.
-- [Channels](user-guide/channels.md): sending and receiving, batch operations, and what crosses a channel.
-- [Task pools](user-guide/pools.md): outcomes, nested tasks, growing and observing a pool.
-- [Parallel map](user-guide/map.md): scheduling, reproducible randomness, templates, prepared maps.
-- [R interop](user-guide/interop.md): R peers and workers, what crosses the language boundary, and the dtype matrix.
-- [API reference](reference/index.md): the generated function and class reference.
+- [Benchmarks](user-guide/benchmarks.md) -- overhead against the stdlib pools, and how pymizu compares with other frameworks.
+- [Channels](user-guide/channels.md) -- sending and receiving, batch operations, and what crosses a channel.
+- [Task pools](user-guide/pools.md) -- outcomes, nested tasks, growing and observing a pool.
+- [Parallel map](user-guide/map.md) -- scheduling, reproducible randomness, templates, prepared maps.
+- [R interop](user-guide/interop.md) -- R peers and workers, what crosses the language boundary, and the dtype matrix.
+- [API reference](reference/index.md) -- the generated function and class reference.
