@@ -1506,14 +1506,14 @@ def _collect_region(
 class Map:
     """A staged, submitted map; collects exactly once, through this handle.
 
-    The handle-first return of [`Pool.map()`](`pymizu.Pool.map`) and
-    [`PreparedMap.run()`](`pymizu.PreparedMap.run`). `collect()` blocks;
-    `collect_async()` / `await` resolves one asyncio Future when the
-    results arrive (never on a streaming map — its sliding task window
-    advances in the blocking collect loop); `cancel()` stops the run:
-    workers halt within about one batch and the outstanding tasks are
-    cancelled. A dropped uncollected handle cancels at GC, so no run of
-    fn is wasted. One collection per handle, as for tasks.
+    Returned by [`Pool.map()`](`pymizu.Pool.map`) and
+    [`PreparedMap.run()`](`pymizu.PreparedMap.run`). `collect()` blocks.
+    `collect_async()` or `await` resolves one asyncio Future when the results
+    arrive (not on a streaming map, whose sliding task window advances in the
+    blocking collect loop). `cancel()` stops the run: workers halt within about
+    one batch and the outstanding tasks are cancelled. A dropped uncollected
+    handle cancels at GC, so no run of fn is wasted. One collection per handle,
+    as for tasks.
     """
 
     __slots__ = (
@@ -1879,13 +1879,13 @@ class Map:
         Parameters
         ----------
         timeout
-            Seconds to wait for completion; None waits indefinitely. On
-            expiry the outstanding work is cancelled and the `TIMEOUT`
-            [`Sentinel`](`pymizu.Sentinel`) is returned, never raised.
+            Seconds to wait for completion; None waits indefinitely. On expiry
+            the outstanding work is cancelled and the `TIMEOUT`
+            [`Sentinel`](`pymizu.Sentinel`) is returned rather than raised.
 
         Returns
         -------
-            The results — the same shapes and outcomes as
+            The results, with the same shapes and outcomes as
             [`PreparedMap.run()`](`pymizu.PreparedMap`) documents.
         """
         import pymizu
@@ -1906,12 +1906,11 @@ class Map:
     def collect_async(self) -> _Any:
         """Resolve one asyncio.Future with the results `collect()` returns.
 
-        The event-driven collect — never blocks, never polls. An element
-        error rejects with its index. Cancelling the Future detaches the
-        waiter (the handle collects blocking again); it never cancels
-        the map — `cancel()` stays the explicit verb. A streaming map
-        refuses: its sliding task window advances in the blocking
-        collect loop.
+        The event-driven collect, which never blocks or polls. An element error
+        rejects with its index. Cancelling the Future detaches the waiter, so
+        the handle can be collected blocking again, and never cancels the map
+        (only `cancel()` does). A streaming map refuses, because its sliding
+        task window advances in the blocking collect loop.
         """
         import pymizu
 
@@ -1971,12 +1970,11 @@ class Map:
     def cancel(self) -> None:
         """Stop the run: workers halt within about one batch.
 
-        Advisory, as [`Task.cancel()`](`pymizu.Task.cancel`): the
-        outstanding tasks are cancelled — a queued task is skipped, a
-        running batch completes and its result is dropped. A pending
-        collect — blocking or async — ends with
-        [`CancelledError`](`pymizu.CancelledError`). Safe to call more
-        than once.
+        Advisory, as [`Task.cancel()`](`pymizu.Task.cancel`): the outstanding
+        tasks are cancelled, so a queued task is skipped, and a running batch
+        completes with its result dropped. A pending collect, blocking or
+        async, ends with [`CancelledError`](`pymizu.CancelledError`). Safe to
+        call more than once.
         """
         if self._cancelled:
             return
@@ -2028,7 +2026,7 @@ class PreparedMap:
     pool
         The [`Pool`](`pymizu.Pool`) to run on.
     fn
-        The function to map, or a [`call`](`pymizu.call`) spec — as for
+        The function to map, or a [`call`](`pymizu.call`) spec, as for
         [`Pool.map()`](`pymizu.Pool.map`).
     x
         The data to map over.
@@ -2039,14 +2037,14 @@ class PreparedMap:
     n_chunks
         Overrides the number of batches the elements are split into.
     template
-        An example buffer declaring each result's dtype and length —
-        as for [`Pool.map()`](`pymizu.Pool.map`).
+        An example buffer declaring each result's dtype and length, as for
+        [`Pool.map()`](`pymizu.Pool.map`).
     stream
-        Stream slices of `x` instead of writing it to shared memory
-        whole — as for [`Pool.map()`](`pymizu.Pool.map`). The map is
-        set up here; `seed` and `collect` are per-run options of
-        [`PreparedMap.run()`](`pymizu.PreparedMap.run`) (mirroring
-        mizu's `mizu_map_run()`).
+        Stream slices of `x` instead of writing it to shared memory whole, as
+        for [`Pool.map()`](`pymizu.Pool.map`). The map is set up here; `seed`
+        and `collect` are per-run options of
+        [`PreparedMap.run()`](`pymizu.PreparedMap.run`) (mirroring mizu's
+        `mizu_map_run()`).
 
     Examples
     --------
@@ -2238,20 +2236,18 @@ class PreparedMap:
         Parameters
         ----------
         x
-            Replaces the staged data for this and later runs. When both
-            the staged and the replacement x are arrays of the same
-            dtype and length, the swap is an in-place copy — a loop
-            that iterates over same-shaped data (optimizer steps,
-            simulation sweeps) runs at copy cost, skipping the region
-            creation and the worker-side set-up. Any other x is staged
-            fresh on this run.
+            Replaces the staged data for this and later runs. When both the
+            staged and the replacement x are arrays of the same dtype and
+            length, the swap is an in-place copy, so a loop over same-shaped
+            data (optimizer steps, simulation sweeps) runs at copy cost,
+            skipping the region creation and the worker-side set-up. Any other
+            x is staged fresh on this run.
         seed
             Deterministic per-element seeding for this run, as for
-            [`Pool.map()`](`pymizu.Pool.map`); ``None`` (the default)
-            runs unseeded. The seed travels with the run's tasks, not
-            the staged data, so reseeding a run is free — the
-            repeated-simulation loop varies ``seed`` per run while the
-            set-up is paid once.
+            [`Pool.map()`](`pymizu.Pool.map`); ``None`` (the default) runs
+            unseeded. The seed travels with the run's tasks, not the staged
+            data, so reseeding a run costs nothing extra: a repeated-simulation
+            loop varies ``seed`` per run while the set-up is paid once.
         timeout
             Seconds before the run's submission gives up; on expiry the
             tasks already in are cancelled and the TIMEOUT
@@ -2259,19 +2255,18 @@ class PreparedMap:
             collection deadline is the handle's `collect()`.
         collect
             ``"copy"`` (the default) or ``"view"``, which requires
-            ``template`` — as for [`Pool.map()`](`pymizu.Pool.map`).
-            The choice is per run.
+            ``template``, as for [`Pool.map()`](`pymizu.Pool.map`). The choice
+            is per run.
 
         Returns
         -------
-            The run's map handle — collected exactly once, by
-            `collect()` (blocking) or `collect_async()` (event-driven).
-            A run is a producer on the pool handle: a concurrent run or
-            submit from a second thread raises `ConcurrentUseError`.
-            A clean value collect keeps the set-up for the next run; a
-            view collect hands the region to the view, and an
-            interrupted run (timeout, an error, a worker death) drops
-            it — the next run stages a fresh one either way.
+            The run's map handle, collected exactly once, by `collect()`
+            (blocking) or `collect_async()` (event-driven). A run is a producer
+            on the pool handle: a concurrent run or submit from a second thread
+            raises `ConcurrentUseError`. A clean value collect keeps the set-up
+            for the next run. A view collect hands the region to the view, and
+            an interrupted run (timeout, an error, a worker death) drops it, so
+            the next run stages a fresh one either way.
         """
         pymizu = self._pymizu
         if self._closed:
@@ -2347,8 +2342,11 @@ class PreparedMap:
         return m
 
     def close(self) -> None:
-        """Unlink the staged region (idempotent; the GC backstop is the
-        capsule destructor)."""
+        """Release the staged shared memory.
+
+        Safe to call more than once; garbage collection releases it
+        otherwise.
+        """
         self._closed = True
         if self._capsule is not None:
             _pymizu._map_close(self._capsule)

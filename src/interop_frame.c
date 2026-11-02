@@ -1605,8 +1605,8 @@ PyDoc_STRVAR(frame_from_arrow_doc,
 "from_arrow(obj) -> Frame\n\n\
 Construct a frame from an Arrow producer, adopting its buffers\n\
 wherever a column's frame layout is the Arrow layout (a single-batch\n\
-producer on offset-0 boundaries), so construction copies nothing it\n\
-does not have to — nulls included.\n\n\
+producer on offset-0 boundaries), so construction copies only what it\n\
+has to, nulls included.\n\n\
 This is the opt-in zero-copy frame path for Python-to-Python\n\
 channels: past the zero-copy floor the frame crosses as one\n\
 shared-memory region and is read in place, where a plain Arrow\n\
@@ -1620,8 +1620,7 @@ Parameters\n\
 obj\n\
     Any ``__arrow_c_stream__`` producer: a pyarrow ``Table`` or\n\
     ``RecordBatchReader``, a polars ``DataFrame``, a duckdb relation.\n\
-    ``Table.combine_chunks()`` is the route to the adopt path for a\n\
-    chunked table.\n\n\
+    A chunked table adopts after ``Table.combine_chunks()``.\n\n\
 Returns\n\
 -------\n\
     The frame. An adopted column keeps the producer's buffers alive\n\
@@ -1630,8 +1629,8 @@ Returns\n\
 Raises\n\
 ------\n\
 MizuError\n\
-    The Arrow type has no portable home (the column is named), or\n\
-    the producer's export failed.\n\n\
+    The Arrow type has no portable equivalent (the error names the\n\
+    column), or the producer's export failed.\n\n\
 Examples\n\
 --------\n\
 >>> import pyarrow as pa\n\
@@ -1791,14 +1790,14 @@ PyTypeObject MizuFrameType = {
      the Frame immutability invariant: any future mutator must clear it
      first (a rebuild arrives in R as a plain data.frame, never a
      mislabeled one). */
-  .tp_doc = "A data.frame's Python home: named columns with a row count.\n"
-            "to_dict() gives the column dict without an Arrow library;\n"
-            "__arrow_c_stream__ exports to polars / pyarrow / pandas.\n"
-            "from_arrow() constructs one from an Arrow producer (the\n"
-            "opt-in zero-copy path for Python-to-Python channels).\n"
-            "R frame metadata (classes, extra attributes) survives an\n"
-            "unmodified round trip; a rebuilt frame arrives in R as a\n"
-            "plain data.frame.",
+  .tp_doc = "A data.frame's Python home: named columns with a row count.\n\n"
+            "to_dict() returns the columns as a dict without an Arrow\n"
+            "library, and __arrow_c_stream__ exports to polars, pyarrow, or\n"
+            "pandas. from_arrow() constructs one from an Arrow producer, the\n"
+            "opt-in zero-copy path for Python-to-Python channels. R frame\n"
+            "metadata (classes, extra attributes) survives an unmodified\n"
+            "round trip, while a rebuilt frame arrives in R as a plain\n"
+            "data.frame.",
   .tp_dealloc = (destructor) Frame_dealloc,
   .tp_repr = (reprfunc) Frame_repr,
   .tp_as_sequence = &Frame_as_sequence,

@@ -135,8 +135,8 @@ static PyTypeObject MizuSentinelType = {
   .tp_repr = sent_repr,
   .tp_as_number = &sent_as_number,
   .tp_flags = Py_TPFLAGS_DEFAULT,
-  .tp_doc = "Terminal-state sentinel returned by pymizu verbs. "
-            "Identity-tested against pymizu.FULL / TIMEOUT / CLOSED / PEER_GONE.",
+  .tp_doc = "A terminal-state sentinel returned by pymizu verbs. "
+            "Test by identity against pymizu.FULL / TIMEOUT / CLOSED / PEER_GONE.",
 };
 
 static PyObject *sentinel_new(const char *name) {
@@ -8194,10 +8194,10 @@ PyDoc_STRVAR(task_collect_doc,
 "collect(timeout=None) -> value | sentinel\n\n\
 Wait up to `timeout` seconds (None indefinitely, 0 polls once) for the\n\
 task to finish and return its result. A task error re-raises as\n\
-pymizu.TaskError (carrying remote_type / detail), a cancellation\n\
-as pymizu.CancelledError, a dead worker as pymizu.WorkerDiedError, a lost\n\
-result as pymizu.TaskLostError.\n\
-pymizu.TIMEOUT on expiry; a task is collected exactly once.");
+pymizu.TaskError (carrying remote_type and detail), a cancellation as\n\
+pymizu.CancelledError, a dead worker as pymizu.WorkerDiedError, and a\n\
+lost result as pymizu.TaskLostError. Returns pymizu.TIMEOUT on expiry.\n\
+A task is collected exactly once.");
 
 static PyObject *Task_collect(MizuTask *self, PyObject *args, PyObject *kw) {
   static char *kwlist[] = {"timeout", NULL};
@@ -8255,9 +8255,9 @@ static PyObject *Task_collect(MizuTask *self, PyObject *args, PyObject *kw) {
 
 PyDoc_STRVAR(task_cancel_doc,
 "cancel() -> bool\n\n\
-Advisory only, never interrupts: a queued task is skipped; a running one\n\
-completes and its result is dropped.\n\
-True when this call cancelled the task; False in every other case.");
+Advisory only, and never interrupts: a queued task is skipped, and a\n\
+running one completes with its result dropped. Returns True when this\n\
+call cancelled the task, False in every other case.");
 
 static PyObject *Task_cancel(MizuTask *self, PyObject *Py_UNUSED(args)) {
   MizuPool *pool = (MizuPool *) self->pool;
@@ -8335,11 +8335,11 @@ static PyObject *aio_func(const char *name) {
 
 PyDoc_STRVAR(task_collect_async_doc,
 "collect_async() -> asyncio.Future\n\n\
-The event-driven collect: an asyncio.Future resolving with the task's\n\
-result (or raising the error collect() raises), resolved when the result\n\
-arrives — never blocks, never polls. Cancelling the Future detaches the\n\
-waiter (a later blocking collect() works again); it never cancels the\n\
-task — cancel() stays the explicit verb.");
+The event-driven collect: an asyncio.Future that resolves with the\n\
+task's result (or raises the error collect() raises) when the result\n\
+arrives, without blocking or polling. Cancelling the Future detaches the\n\
+waiter, so a later blocking collect() works again, and never cancels the\n\
+task (only cancel() does).");
 
 static PyObject *Task_collect_async(MizuTask *self,
                                     PyObject *Py_UNUSED(args)) {
@@ -8414,8 +8414,8 @@ static PyTypeObject MizuTaskType = {
   .tp_basicsize = sizeof(MizuTask),
   .tp_repr = (reprfunc) Task_repr,
   .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,
-  .tp_doc = "A task handle from Pool.submit(). Collected exactly once; "
-            "an uncollected handle's finalizer releases its slot.",
+  .tp_doc = "A task handle from Pool.submit(). It is collected exactly once, "
+            "and an uncollected handle releases its slot when garbage collected.",
   .tp_methods = Task_methods,
   .tp_getset = Task_getset,
   .tp_as_async = &Task_as_async,
@@ -9015,8 +9015,9 @@ static PyObject *pymizu_write_err(PyObject *Py_UNUSED(module),
 
 PyDoc_STRVAR(is_sentinel_doc,
 "is_sentinel(x) -> bool\n\n\
-Provenance, not shape: True only for the exact sentinel singletons this\n\
-process's verbs return, so a look-alike payload never passes.");
+True only for the exact sentinel singletons this process's verbs\n\
+return, so a look-alike payload never passes. The test is identity, not\n\
+class.");
 
 static PyObject *pymizu_is_sentinel(PyObject *Py_UNUSED(module), PyObject *x) {
   return PyBool_FromLong(x == SentFull || x == SentTimeout ||
@@ -9284,9 +9285,8 @@ PyInit__pymizu(void)
                     "and 'pid' attributes identifying the worker.") < 0 ||
       add_exception(m, &MizuTaskLostError, "pymizu.TaskLostError", MizuError,
                     NULL,
-                    "The claimant's read of the task's payload region "
-                    "failed without a death verdict — a vanished or "
-                    "unreadable region, not a dead worker.") < 0 ||
+                    "The task's payload region vanished or could not be "
+                    "read before any worker ran it. No worker died.") < 0 ||
       add_exception(m, &MizuTaskError, "pymizu.TaskError", MizuError,
                     NULL,
                     "The task callable raised. Carries 'remote_type' and "
@@ -9301,10 +9301,10 @@ PyInit__pymizu(void)
       add_exception(m, &MizuForeignPayloadError, "pymizu.ForeignPayloadError",
                     MizuError, NULL,
                     "A received payload in a language-private or "
-                    "unrecognized format: a peer sent outside the portable "
-                    "interchange subset. The message is consumed, never "
-                    "wedging the ring; the async drain rejects only the "
-                    "head waiter and continues.") < 0 ||
+                    "unrecognized format: the peer sent a value outside the "
+                    "portable interchange subset. The message is consumed, "
+                    "so the ring is never blocked, and under recv_async() "
+                    "only the Future waiting on that message rejects.") < 0 ||
       add_exception(m, &MizuConcurrentUseError, "pymizu.ConcurrentUseError",
                     MizuError, NULL,
                     "A verb ran concurrently with another verb in the "

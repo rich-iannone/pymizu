@@ -1,12 +1,12 @@
 # Contributing
 
-Contributions are welcome — bug reports and pull requests alike.
+Bug reports and pull requests are welcome.
 pymizu is pre-release and the API can change at any time, so open an issue to discuss larger changes before doing the work.
 
 ## Reporting bugs
 
 Open a GitHub issue with a minimal reproducer, your platform, and your Python version.
-For a pool that hangs, include the output of `pool.dump()` — it is the first diagnostic tool.
+For a pool that hangs, include the output of `pool.dump()`, the first diagnostic tool.
 
 ## Pull requests
 
@@ -25,7 +25,7 @@ Conventions:
 
 - Commit messages are a single-line subject, no body.
 - New behavior needs a test.
-  Task callables used in pool tests belong in `tests/helpers.py`, not the test module — pickle sends them by reference, so spawned workers must import them.
+  Task callables used in pool tests belong in `tests/helpers.py`, not the test module, because pickle sends them by reference and the spawned workers must import them.
 - Never edit `src/vendor/libmizu/` by hand.
   Changes go upstream to [libmizu](https://github.com/shikokuchuo/libmizu) and land here via `tools/vendor-libmizu.sh`.
 - Cross-language tests skip unless `Rscript` and the R `mizu` package are installed.
