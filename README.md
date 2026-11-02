@@ -10,12 +10,12 @@
 
 Async and parallel Python at thread speed over shared memory.
 
-Task round trips drop from ~100 µs over sockets to < 1 µs, fast enough to parallelize work at thread granularity (see [Benchmarks](#benchmarks)). Common data structures like lists, dicts, numpy arrays, and Arrow tables can be shared between Python and R as zero-copy views.
+A task round trip drops from ~100 µs over sockets to < 1 µs, so you can divide work as finely as you would with threads (see [Benchmarks](#benchmarks)). Common data structures like lists, dicts, numpy arrays, and Arrow tables can be shared between Python and R as zero-copy views.
 
 In the default CPython build, the GIL runs CPU-bound threads on one core at a time, so compute parallelism in Python usually means multiple processes.
 Processes also isolate failures: a worker that crashes does not take the host down with it.
 
-Channels and work-stealing task pools run over POSIX shared memory (Linux, macOS) or Win32 file mappings (Windows): lock-free single-producer single-consumer rings with batched publication, spin-then-park waiting with the hot path bypassing the kernel, and peer death delivered as an OS event.
+Channels and work-stealing task pools run over POSIX shared memory (Linux, macOS) or Win32 file mappings (Windows): lock-free single-producer single-consumer rings with batched publication, spin-then-park waiting that stays out of the kernel on the hot path, and OS notification when a peer dies.
 
 pymizu is built on [libmizu](https://github.com/shikokuchuo/libmizu), a C library for lock-free shared-memory IPC.
 [mizu](https://github.com/shikokuchuo/mizu) binds the same core for R, so Python and R can talk to each other.
@@ -137,12 +137,12 @@ The [documentation site](https://shikokuchuo.net/pymizu/) covers the full packag
 
 ## Contributing
 
-The repository layout and contributor notes live in [CONTRIBUTING.md](CONTRIBUTING.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the repository layout and contributor notes.
 
 ## License
 
 MIT.
-The vendored libmizu core carries third-party RngStreams attribution (see [`LICENSE.note`](LICENSE.note)).
+[`LICENSE.note`](LICENSE.note) has the RngStreams attribution for the vendored libmizu core.
 
 ------------------------------------------------------------------------
 
