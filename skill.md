@@ -1,14 +1,14 @@
 ---
 name: pymizu
 description: >
-  Zero-copy async and parallel IPC across Python and R. Use when writing Python code that uses the pymizu package.
+  Async and parallel Python at thread speed over shared memory. Use when writing Python code that uses the pymizu package.
 license: MIT
 compatibility: Requires Python >=3.10.
 ---
 
 # pymizu
 
-Zero-copy async and parallel IPC across Python and R
+Async and parallel Python at thread speed over shared memory
 
 ## Installation
 

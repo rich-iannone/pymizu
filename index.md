@@ -2,9 +2,9 @@
 
 ![pymizu logo](assets/logo.svg) ![pymizu logo](assets/logo-dark.svg)
 
-pymizu uses shared memory to make communication between Python processes fast enough to parallelize work at thread granularity.
+Async and parallel Python at thread speed over shared memory
 
-Task round trips drop from ~100 µs over sockets to \< 1 µs -- two orders of magnitude (see [Benchmarks](#benchmarks)). Common data structures like lists, dicts, numpy arrays, and Arrow tables can be shared between Python and R as zero-copy views.
+Task round trips drop from ~100 µs over sockets to \< 1 µs, fast enough to parallelize work at thread granularity (see [Benchmarks](#benchmarks)). Common data structures like lists, dicts, numpy arrays, and Arrow tables can be shared between Python and R as zero-copy views.
 
 In the default CPython build, the GIL runs CPU-bound threads on one core at a time, so compute parallelism in Python usually means multiple processes. Processes also isolate failures: a worker that crashes does not take the host down with it.
 
@@ -13,10 +13,10 @@ Channels and work-stealing task pools run over POSIX shared memory (Linux, macOS
 pymizu is built on [libmizu](https://github.com/shikokuchuo/libmizu), a C library for lock-free shared-memory IPC. [mizu](https://github.com/shikokuchuo/mizu) binds the same core for R, so Python and R can talk to each other.
 
 - Zero-copy numpy arrays and Arrow interchange (pyarrow, polars, pandas, duckdb)
-- Drop-in `concurrent.futures.Executor` -- real `Future`s, `wait`, `as_completed`, `asyncio.wrap_future`
-- Event-driven asyncio -- `await` tasks and maps, `async for` and [recv_async()](./reference/Channel.recv_async.md#pymizu.Channel.recv_async) on channels -- wake-ups as data arrives, no polling threads
-- Reproducible parallel random numbers (`seed=`) -- identical results for any worker count or steal order
-- Nested parallel maps -- a task can map over its own pool, deadlock-free
+- Drop-in `concurrent.futures.Executor`: real `Future`s, `wait`, `as_completed`, `asyncio.wrap_future`
+- Event-driven asyncio: `await` tasks and maps, `async for` and [recv_async()](./reference/Channel.recv_async.md#pymizu.Channel.recv_async) on channels, with wake-ups as data arrives and no polling threads
+- Reproducible parallel random numbers (`seed=`): identical results for any worker count or steal order
+- Nested parallel maps: a task can map over its own pool, deadlock-free
 
 > **Pre-release.** The API is not yet stable and we may make changes in response to feedback.
 
@@ -70,7 +70,7 @@ See [Benchmarks](user-guide/benchmarks.md) for how pymizu compares with other fr
 
 ### Drop-in `concurrent.futures`
 
-[PoolExecutor](./reference/PoolExecutor.md#pymizu.PoolExecutor) adapts a pool to the stdlib `concurrent.futures.Executor` interface -- code written against `ProcessPoolExecutor` drops in, and `submit` returns real `Future` objects:
+[PoolExecutor](./reference/PoolExecutor.md#pymizu.PoolExecutor) adapts a pool to the stdlib `concurrent.futures.Executor` interface, so code written against `ProcessPoolExecutor` drops in, and `submit` returns real `Future` objects:
 
 ``` python
 with pymizu.PoolExecutor.create(4) as ex:
@@ -86,9 +86,9 @@ See [Task pools](user-guide/pools.md#concurrentfutures-interop) for wrapping an 
 
 ### Parallel map
 
-`Pool.map(fn, x)` maps `fn` over `x` on the pool and returns a [Map](./reference/Map.md#pymizu.Map) handle immediately. The function and data cross into shared memory once. Workers divide the elements among themselves, claiming ranges from a shared cursor. `handle.collect()` returns the results in order -- or `await handle` in asyncio code.
+`Pool.map(fn, x)` maps `fn` over `x` on the pool and returns a [Map](./reference/Map.md#pymizu.Map) handle immediately. The function and data cross into shared memory once. Workers divide the elements among themselves, claiming ranges from a shared cursor. `handle.collect()` returns the results in order, or `await handle` in asyncio code.
 
-A map also nests -- the mapped function can map over its own pool with [pymizu.current_pool()](./reference/current_pool.md#pymizu.current_pool), deadlock-free.
+A map also nests: the mapped function can map over its own pool with [pymizu.current_pool()](./reference/current_pool.md#pymizu.current_pool), deadlock-free.
 
 ``` python
 with pymizu.Pool.create(4) as pool:
@@ -124,9 +124,9 @@ The mizu README shows the reverse direction: an R host that drives Python worker
 
 ### Where next
 
-- [Benchmarks](user-guide/benchmarks.md) -- overhead against the stdlib pools, and how pymizu compares with other frameworks.
-- [Channels](user-guide/channels.md) -- sending and receiving, batch operations, and what crosses a channel.
-- [Task pools](user-guide/pools.md) -- outcomes, nested tasks, growing and observing a pool.
-- [Parallel map](user-guide/map.md) -- scheduling, reproducible randomness, templates, prepared maps.
-- [R interop](user-guide/interop.md) -- R peers and workers, what crosses the language boundary, and the dtype matrix.
-- [API reference](reference/index.md) -- the generated function and class reference.
+- [Benchmarks](user-guide/benchmarks.md): overhead against the stdlib pools, and how pymizu compares with other frameworks.
+- [Channels](user-guide/channels.md): sending and receiving, batch operations, and what crosses a channel.
+- [Task pools](user-guide/pools.md): outcomes, nested tasks, growing and observing a pool.
+- [Parallel map](user-guide/map.md): scheduling, reproducible randomness, templates, prepared maps.
+- [R interop](user-guide/interop.md): R peers and workers, what crosses the language boundary, and the dtype matrix.
+- [API reference](reference/index.md): the generated function and class reference.

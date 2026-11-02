@@ -1,6 +1,6 @@
 # pymizu
 
-> Zero-copy async and parallel IPC across Python and R
+> Async and parallel Python at thread speed over shared memory
 
 ## Docs
 
