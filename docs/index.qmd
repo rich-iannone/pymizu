@@ -1,14 +1,14 @@
 ---
 title: "pymizu"
-subtitle: "Zero-copy async and parallel IPC across Python and R"
+subtitle: "Async and parallel Python at thread speed over shared memory"
 ---
 
 <img src="assets/logo.svg" class="light-content" align="right" width="240" alt="pymizu logo"/>
 <img src="assets/logo-dark.svg" class="dark-content" align="right" width="240" alt="pymizu logo"/>
 
-pymizu uses shared memory to make communication between Python processes fast enough to parallelize work at thread granularity.
+Async and parallel Python at thread speed over shared memory.
 
-Task round trips drop from ~100 µs over sockets to < 1 µs — two orders of magnitude (see [Benchmarks](#benchmarks)). Common data structures like lists, dicts, numpy arrays, and Arrow tables can be shared between Python and R as zero-copy views.
+Task round trips drop from ~100 µs over sockets to < 1 µs, fast enough to parallelize work at thread granularity (see [Benchmarks](#benchmarks)). Common data structures like lists, dicts, numpy arrays, and Arrow tables can be shared between Python and R as zero-copy views.
 
 In the default CPython build, the GIL runs CPU-bound threads on one core at a time, so compute parallelism in Python usually means multiple processes.
 Processes also isolate failures: a worker that crashes does not take the host down with it.
@@ -75,7 +75,7 @@ See [Benchmarks](user-guide/benchmarks.qmd) for how pymizu compares with other f
 
 ## Drop-in `concurrent.futures`
 
-`PoolExecutor` adapts a pool to the stdlib `concurrent.futures.Executor` interface — code written against `ProcessPoolExecutor` drops in, and `submit` returns real `Future` objects:
+`PoolExecutor` adapts a pool to the stdlib `concurrent.futures.Executor` interface, so code written against `ProcessPoolExecutor` drops in, and `submit` returns real `Future` objects:
 
 ```{python}
 with pymizu.PoolExecutor.create(4) as ex:
@@ -92,9 +92,9 @@ See [Task pools](user-guide/pools.qmd#concurrentfutures-interop) for wrapping an
 `Pool.map(fn, x)` maps `fn` over `x` on the pool and returns a `Map` handle immediately.
 The function and data cross into shared memory once.
 Workers divide the elements among themselves, claiming ranges from a shared cursor.
-`handle.collect()` returns the results in order — or `await handle` in asyncio code.
+`handle.collect()` returns the results in order, or `await handle` in asyncio code.
 
-A map also nests — the mapped function can map over its own pool with `pymizu.current_pool()`, deadlock-free.
+A map also nests: the mapped function can map over its own pool with `pymizu.current_pool()`, deadlock-free.
 
 ```{python}
 with pymizu.Pool.create(4) as pool:

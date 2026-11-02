@@ -9158,7 +9158,7 @@ static PyMethodDef pymizu_methods[] = {
 };
 
 PyDoc_STRVAR(pymizu_module_doc,
-"Zero-copy async and parallel IPC across Python and R\n\
+"Async and parallel Python at thread speed over shared memory\n\
 (the libmizu core, compiled in).");
 
 static struct PyModuleDef pymizu_module = {

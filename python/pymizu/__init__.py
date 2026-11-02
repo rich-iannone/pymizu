@@ -1,4 +1,4 @@
-"""pymizu — Zero-copy async and parallel IPC across Python and R."""
+"""pymizu — Async and parallel Python at thread speed over shared memory."""
 
 from __future__ import annotations
 

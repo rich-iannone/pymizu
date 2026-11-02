@@ -8,9 +8,9 @@
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Python 3.10+](https://img.shields.io/badge/python-%3E%3D3.10-blue)](https://www.python.org/)
 
-pymizu uses shared memory to make communication between Python processes fast enough to parallelize work at thread granularity.
+Async and parallel Python at thread speed over shared memory.
 
-Task round trips drop from ~100 µs over sockets to < 1 µs — two orders of magnitude (see [Benchmarks](#benchmarks)). Common data structures like lists, dicts, numpy arrays, and Arrow tables can be shared between Python and R as zero-copy views.
+Task round trips drop from ~100 µs over sockets to < 1 µs, fast enough to parallelize work at thread granularity (see [Benchmarks](#benchmarks)). Common data structures like lists, dicts, numpy arrays, and Arrow tables can be shared between Python and R as zero-copy views.
 
 In the default CPython build, the GIL runs CPU-bound threads on one core at a time, so compute parallelism in Python usually means multiple processes.
 Processes also isolate failures: a worker that crashes does not take the host down with it.
@@ -85,7 +85,7 @@ See [how pymizu compares](https://shikokuchuo.net/pymizu/user-guide/benchmarks.h
 
 ## Drop-in `concurrent.futures`
 
-`PoolExecutor` adapts a pool to the stdlib `concurrent.futures.Executor` interface — code written against `ProcessPoolExecutor` drops in.
+`PoolExecutor` adapts a pool to the stdlib `concurrent.futures.Executor` interface, so code written against `ProcessPoolExecutor` drops in.
 `submit` returns real `Future` objects, so `wait` / `as_completed` / `asyncio.wrap_future` all work unchanged:
 
 ```python
@@ -100,7 +100,7 @@ with pymizu.PoolExecutor.create(4) as ex:
 The function and data cross into shared memory once.
 Workers divide the elements among themselves, claiming ranges from a shared cursor.
 
-A map also nests — the mapped function can map over its own pool with `pymizu.current_pool()`, deadlock-free.
+A map also nests: the mapped function can map over its own pool with `pymizu.current_pool()`, deadlock-free.
 
 ```python
 with pymizu.Pool.create(4) as pool:
@@ -128,7 +128,7 @@ with pymizu.Pool.create(4, launcher=pymizu.r_launcher()) as pool:
 - A vector or data frame arrives back as a numpy array or a `pymizu.Frame`
 - Arrow data (pyarrow tables and record batch readers, or any `__arrow_c_stream__` producer) crosses the same way
 
-The full contract — the portable subset, `pymizu.Frame`, zero-copy frames, and the dtype matrix — is on the [R interop](https://shikokuchuo.net/pymizu/user-guide/interop.html) page.
+The [R interop](https://shikokuchuo.net/pymizu/user-guide/interop.html) page has the full contract: the portable subset, `pymizu.Frame`, zero-copy frames, and the dtype matrix.
 The mizu README shows the reverse direction: an R host that drives Python workers with `mizu_py_launcher()`.
 
 ## Documentation
