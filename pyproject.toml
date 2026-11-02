@@ -117,7 +117,8 @@ min-severity = "warn"
 [tool.pytest.ini_options]
 minversion = "8.0"
 testpaths = ["tests"]
-addopts = "-ra --durations 10 --strict-markers"
+addopts = ["-ra", "--durations=10", "--strict-markers", "--strict-config"]
+xfail_strict = true
 
 [tool.coverage.run]
 source = ["pymizu"]
